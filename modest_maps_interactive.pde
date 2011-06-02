@@ -32,8 +32,8 @@ boolean tracking = true; //true: Malte Spitz moving
 void setup() {
   size(800, 600);
   smooth();
-  frameRate(5);
-  
+  //frameRate(20);
+
   //load the csv-file with Malte Spitz' location data
   trackdata = loadStrings("ex_data.csv");
   trackpoints = new ArrayList(); //create empty ArrayList
@@ -81,22 +81,48 @@ class Trackpoint {
     String[] date = split(datetime[0], "/"); //date[0]=8 date[1]=31
     String[] hoursminutes = split(datetime[1], ":"); //hoursminutes[0]=8 [1]=09
 
-     // new GregorianCalendar(YEAR, MONTH, DAY, HOUR, MINUTE)
-    time = new GregorianCalendar(int(date[2])+2000, int(date[0])-1, int(date[1]), int(hoursminutes[0]), int(hoursminutes[1]));
-    service = pieces[1];
-    location = new Location(float(pieces[2]), float(pieces[3]));
+    // new GregorianCalendar(YEAR, MONTH, DAY, HOUR, MINUTE)
+    this.time = new GregorianCalendar(int(date[2])+2000, int(date[0])-1, int(date[1]), int(hoursminutes[0]), int(hoursminutes[1]));
+    this.service = pieces[1];
+    this.location = new Location(float(pieces[2]), float(pieces[3]));
   }
 }
 
+class Amountbubble {
+  float x, y, size;
+
+  public Amountbubble(float x, float y) {
+    this.x = x;
+    this.y = y;
+    this.size = 0.4;
+  }
+
+  void increaseSize() {
+    this.size = size+0.2;
+  }
+
+  void decreaseSize() {
+    this.size = size-0.2;
+  }
+
+  void draw() {
+    fill(0,255,255,50);
+    ellipse(x,y,size,size);
+  }
+}
+
+
+
+
 void draw() {
   background(0);
-  
-  
+
+
   if (showmap) {
     // draw the map:
     map.draw();
   }
-  
+
   smooth();
 
   // draw all the buttons and check for mouse-over
@@ -155,13 +181,13 @@ void draw() {
     // grab the center
     location = map.pointLocation(width/2, height/2);
 
-    // draw the center location, bottom right:
     fill(0);
     noStroke();
     float rw = textWidth("map: " + location);
     rect(width-5-rw, height-5-g.textSize, rw, g.textSize+textDescent());
     fill(255,255,0);
     textAlign(RIGHT, BOTTOM);
+    //show number trackpoints in trackpoints[]
     text("# trackpoints: " + str(trackpoints.size()), width-5, height-5);
 
     //draw point at a location.
@@ -184,61 +210,66 @@ void draw() {
      fill(0,255,255);
      stroke(255,255,0);
      ellipse(punkt.x, punkt.y, 8, 8);
-     } */
+     }
+     */
 
-
-
-    //TODO: copy Arraylist
-    trackpointstemp = trackpoints;
-
-    if (tracking) {
-      //show and connect five points in order of appearance
-      //for (int i = 0; i <= trackpointstemp.size()-1; i++) {  
-        int i = 0;
-        Trackpoint trackpoint1 = (Trackpoint) trackpointstemp.get(i);
-        Trackpoint trackpoint2 = (Trackpoint) trackpointstemp.get(i+1);
-        Trackpoint trackpoint3 = (Trackpoint) trackpointstemp.get(i+2);
-        Trackpoint trackpoint4 = (Trackpoint) trackpointstemp.get(i+3);
-        Trackpoint trackpoint5 = (Trackpoint) trackpointstemp.get(i+4);
-        
-        Point2f punkt1 = map.locationPoint(trackpoint1.location);
-        Point2f punkt2 = map.locationPoint(trackpoint2.location);
-        Point2f punkt3 = map.locationPoint(trackpoint3.location);
-        Point2f punkt4 = map.locationPoint(trackpoint4.location);
-        Point2f punkt5 = map.locationPoint(trackpoint5.location);
-        
-        fill(102,102,102);
-        noStroke();
-        
-        ellipse(punkt1.x, punkt1.y, 8, 8);
-        ellipse(punkt2.x, punkt2.y, 8, 8);
-        ellipse(punkt3.x, punkt3.y, 8, 8);
-        ellipse(punkt4.x, punkt4.y, 8, 8);
-        ellipse(punkt5.x, punkt5.y, 8, 8);
-        
-        
-        strokeWeight(2);
-        stroke(102,102,102);
-        line(punkt1.x, punkt1.y, punkt2.x, punkt2.y);
-        line(punkt2.x, punkt2.y, punkt3.x, punkt3.y);
-        line(punkt3.x, punkt3.y, punkt4.x, punkt4.y);
-        line(punkt4.x, punkt4.y, punkt5.x, punkt5.y);
-        
-        
-        
-        
-        fill(0,0,0);
-        text(trackpoint1.time.getTime() + " " + trackpoint1.location , punkt1.x - 4, punkt1.y + 5);
-        trackpointstemp.remove(0);
-      //}
-      //then move Malte Spitz on this path
-    }
-  }  
-
-  //Printing the current position to stdout
-  //println((float)map.sc);
-  //println((float)map.tx + " " + (float)map.ty);
+    //zuerst zeichnen, aus array löschen
+    //TODO: Zeiteingabe von wann bis wann er durchlaufen soll
+    // beim nächsten schauen ob in der nähe von einem bestehenden
   
+
+
+
+
+
+  //TODO: copy Arraylist - here i point to the same object
+  trackpointstemp = trackpoints;
+
+  if (tracking) {
+    //show and connect five points in order of appearance
+    //for (int i = 0; i <= trackpointstemp.size()-1; i++) {  
+    int i = 0;
+    Trackpoint trackpoint1 = (Trackpoint) trackpointstemp.get(i);
+    Trackpoint trackpoint2 = (Trackpoint) trackpointstemp.get(i+1);
+    Trackpoint trackpoint3 = (Trackpoint) trackpointstemp.get(i+2);
+    Trackpoint trackpoint4 = (Trackpoint) trackpointstemp.get(i+3);
+    Trackpoint trackpoint5 = (Trackpoint) trackpointstemp.get(i+4);
+
+    Point2f punkt1 = map.locationPoint(trackpoint1.location);
+    Point2f punkt2 = map.locationPoint(trackpoint2.location);
+    Point2f punkt3 = map.locationPoint(trackpoint3.location);
+    Point2f punkt4 = map.locationPoint(trackpoint4.location);
+    Point2f punkt5 = map.locationPoint(trackpoint5.location);
+
+    //fill (R, G, B, alpha)
+    fill(102,102,102, 80);
+    noStroke();
+
+    ellipse(punkt1.x, punkt1.y, 15, 15);
+    ellipse(punkt2.x, punkt2.y, 10, 10);
+    ellipse(punkt3.x, punkt3.y, 10, 10);
+    ellipse(punkt4.x, punkt4.y, 10, 10);
+    ellipse(punkt5.x, punkt5.y, 10, 10);
+
+
+    strokeWeight(2);
+    stroke(102,102,102, 90);
+    line(punkt1.x, punkt1.y, punkt2.x, punkt2.y);
+    line(punkt2.x, punkt2.y, punkt3.x, punkt3.y);
+    line(punkt3.x, punkt3.y, punkt4.x, punkt4.y);
+    line(punkt4.x, punkt4.y, punkt5.x, punkt5.y);
+
+
+    fill(0,0,0);
+    text(trackpoint1.time.getTime().getDate() + " " + trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
+    trackpointstemp.remove(0);
+  }
+}  
+
+//Printing the current mouse position to stdout
+//println((float)map.sc);
+//println((float)map.tx + " " + (float)map.ty);
+
 }
 
 void keyReleased() {
@@ -259,6 +290,12 @@ void keyReleased() {
   }
   else if (key == 'm') {
     showmap = !showmap;
+  }
+  else if (key == '+') {
+    //faster speed
+  }
+  else if (key == '-') {
+    //slower speed
   }
 }
 
