@@ -180,31 +180,34 @@ void draw() {
     //problem: showing all point (more than 17000 in total) slows zooming down extremely)
 
     
-
-    for (int i = 0; i <= trackpoints.size()-1; i++) { 
-       // An ArrayList doesn't know what it is storing so we have 
-       // to cast the object coming out
-       Trackpoint trackpoint = (Trackpoint) trackpoints.get(i);
-       Point2f punkt = map.locationPoint(trackpoint.location);
-       fill(0,255,255);
-       stroke(255,255,0);
-       
-       Amountbubble amountbubble = new Amountbubble(round(punkt.x*100)/100, round(punkt.y*100)/100);
-       //ellipse(punkt.x, punkt.y, 8, 8);
-       //amountbubble.draw();
-       
-
-       for (int j = 0; j < amountbubbles.size(); j++) {
-         Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(i);
-         if(bubbletemp.x == amountbubble.x && bubbletemp.y == amountbubble.y) {
-           bubbletemp.increaseSize();
-         }
-         else {
-           amountbubbles.add(amountbubble);
-         }
-       }
-       
-    }
+//
+//    for (int i = 0; i <= trackpoints.size()-1; i++) { 
+//       // An ArrayList doesn't know what it is storing so we have 
+//       // to cast the object coming out
+//       Trackpoint trackpoint = (Trackpoint) trackpoints.get(i);
+//       Point2f punkt = map.locationPoint(trackpoint.location);
+//       fill(0,255,255);
+//       stroke(255,255,0);
+//       
+//       Amountbubble amountbubble = new Amountbubble(round(punkt.x*1000)/1000, round(punkt.y*1000)/1000);
+//       //ellipse(punkt.x, punkt.y, 8, 8);
+//       //amountbubble.draw();
+//       
+//       if(amountbubbles.size() == 0) {
+//           amountbubbles.add(amountbubble);
+//       }
+//       
+//       for (int j = 0; j < amountbubbles.size(); j++) {
+//         Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
+//         if(bubbletemp.x == amountbubble.x && bubbletemp.y == amountbubble.y) {
+//           bubbletemp.increaseSize();
+//         }
+//         else {
+//           amountbubbles.add(amountbubble);
+//         }
+//       }
+//       
+//    }
 
 
     //zuerst zeichnen, aus array löschen, beim nächsten schauen ob in der nähe von einem bestehenden
