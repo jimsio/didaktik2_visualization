@@ -25,14 +25,17 @@ PFont font;
 String[] trackdata;
 ArrayList trackpoints;
 ArrayList trackpointstemp;
+ArrayList amountbubbles;
 boolean showgui = true; //showing all the buttons/points/tracks
 boolean showmap = true; //show map
-boolean tracking = true; //true: Malte Spitz moving
+boolean tracking = false; //true: Malte Spitz moving
 
 void setup() {
   size(800, 600);
   smooth();
   //frameRate(20);
+  
+  amountbubbles = new ArrayList(); //create empty ArrayList
 
   //load the csv-file with Malte Spitz' location data
   trackdata = loadStrings("ex_data.csv");
@@ -88,35 +91,10 @@ class Trackpoint {
   }
 }
 
-class Amountbubble {
-  float x, y, size;
 
-  public Amountbubble(float x, float y) {
-    this.x = x;
-    this.y = y;
-    this.size = 0.4;
-  }
-
-  void increaseSize() {
-    this.size = size+0.2;
-  }
-
-  void decreaseSize() {
-    this.size = size-0.2;
-  }
-
-  void draw() {
-    fill(0,255,255,50);
-    ellipse(x,y,size,size);
-  }
-}
-
-
-
-
+//everything that should be drawn comes in here
 void draw() {
   background(0);
-
 
   if (showmap) {
     // draw the map:
@@ -124,7 +102,7 @@ void draw() {
   }
 
   smooth();
-
+  
   // draw all the buttons and check for mouse-over
   boolean hand = false;
   if (showgui) {
@@ -201,28 +179,43 @@ void draw() {
     //Iterate through the trackpoints and show them on the map
     //problem: showing all point (more than 17000 in total) slows zooming down extremely)
 
-    /*
+    
+
     for (int i = 0; i <= trackpoints.size()-1; i++) { 
-     // An ArrayList doesn't know what it is storing so we have 
-     // to cast the object coming out
-     Trackpoint trackpoint = (Trackpoint) trackpoints.get(i);
-     Point2f punkt = map.locationPoint(trackpoint.location);
-     fill(0,255,255);
-     stroke(255,255,0);
-     ellipse(punkt.x, punkt.y, 8, 8);
-     }
-     */
+       // An ArrayList doesn't know what it is storing so we have 
+       // to cast the object coming out
+       Trackpoint trackpoint = (Trackpoint) trackpoints.get(i);
+       Point2f punkt = map.locationPoint(trackpoint.location);
+       fill(0,255,255);
+       stroke(255,255,0);
+       
+       Amountbubble amountbubble = new Amountbubble(round(punkt.x*100)/100, round(punkt.y*100)/100);
+       //ellipse(punkt.x, punkt.y, 8, 8);
+       //amountbubble.draw();
+       
 
-    //zuerst zeichnen, aus array löschen
-    //TODO: Zeiteingabe von wann bis wann er durchlaufen soll
-    // beim nächsten schauen ob in der nähe von einem bestehenden
+       for (int j = 0; j < amountbubbles.size(); j++) {
+         Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(i);
+         if(bubbletemp.x == amountbubble.x && bubbletemp.y == amountbubble.y) {
+           bubbletemp.increaseSize();
+         }
+         else {
+           amountbubbles.add(amountbubble);
+         }
+       }
+       
+    }
+
+
+    //zuerst zeichnen, aus array löschen, beim nächsten schauen ob in der nähe von einem bestehenden
   
+    //TODO: Zeiteingabe von wann bis wann er durchlaufen soll
 
 
 
 
 
-  //TODO: copy Arraylist - here i point to the same object
+  //TODO: copy Arraylist - here i point to the same object:
   trackpointstemp = trackpoints;
 
   if (tracking) {
