@@ -40,7 +40,7 @@ int trackpointsCounter = 0;
 void setup() {
   size(800, 600);
   smooth();
-  //frameRate(20);
+  frameRate(10000);
 
   amountbubbles = new ArrayList(); //create empty ArrayList
 
@@ -55,7 +55,7 @@ void setup() {
 
   // create a new map, optionally specify a provider
   //map = new InteractiveMap(this, new OpenStreetMapProvider());
-  map = new InteractiveMap(this, new OpenStreetMapProvider());
+  map = new InteractiveMap(this, new Microsoft.RoadProvider()); //OpenStreetMapProvider());
   // TODO: maybe change the appearance of OpenStreetMap to something less distractive
   // others would be "new Microsoft.RoadProvider" or "new Microsoft.HybridProvider()" or "new Microsoft.AerialProvider()"
   // the Google ones get blocked after a few hundred tiles
@@ -181,7 +181,7 @@ void draw() {
     fill(255,255,0);
     textAlign(RIGHT, BOTTOM);
     //show number trackpoints in trackpoints[]
-    text("# trackpoints: " + str(trackpoints.size()), width-5, height-5);
+    text("# trackpointcounter: " + trackpointsCounter, width-5, height-5);
 
     //draw point at a location.
     /* Location location2 = new Location(52.52944444, 13.39611111);
@@ -214,42 +214,43 @@ void draw() {
      }*/
 
     //show some (~1450) trackpoints as transparent circles
-    for (int i = 0; i <= trackpoints.size()-16000; i++) { 
+    //for (int i = 0; i < trackpoints.size(); i++) { 
       // An ArrayList doesn't know what it is storing so we have 
       // to cast the object coming out
-      Trackpoint trackpoint = (Trackpoint) trackpoints.get(i);
-      Point2f punkt = map.locationPoint(trackpoint.location);
-      fill(0,255,255);
-      stroke(255,255,0);
+      //Trackpoint trackpoint = (Trackpoint) trackpoints.get(i);
+      //Point2f punkt = map.locationPoint(trackpoint.location);
+      //fill(0,255,255);
+      //stroke(255,255,0);
       //ellipse(punkt.x, punkt.y, 8, 8);
 
-      //Amountbubble amountbubble = new Amountbubble(round(punkt.x*1000)/1000, round(punkt.y*1000)/1000);
-      //amountbubble.draw();
 
-
-
-      /*if(amountbubbles.size() == 0) {
-       amountbubbles.add(amountbubble);
-       }*/
-
-      /*for (int j = 0; j < amountbubbles.size(); j++) {
-       Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
-       if(bubbletemp.x == amountbubble.x && bubbletemp.y == amountbubble.y) {
-       bubbletemp.increaseSize();
-       }
-       else {
-       amountbubbles.add(amountbubble);
-       }
-       }*/
-    }
+//
+//      boolean found = false;
+//      
+//      for (int j = 0; j < amountbubbles.size(); j++) {
+//       Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
+//       if(bubbletemp.equalsOther(punkt)) {
+//         bubbletemp.increaseSize();
+//         found = true;
+//         break;
+//       }
+//      }
+//      
+//      if (!found) {
+//        Amountbubble amountbubble = new Amountbubble(punkt);
+//        //round(punkt.x*100000)/100000, round(punkt.y*100000)/100000);
+//        amountbubbles.add(amountbubble);
+//        amountbubble.draw();
+//      }
+       
+       
+    //}
     
   }
 
 
     //zuerst zeichnen, aus array löschen, beim nächsten schauen ob in der nähe von einem bestehenden
     //TODO: Zeiteingabe von wann bis wann er durchlaufen soll
-
-
 
 
 
@@ -290,16 +291,38 @@ void draw() {
 
 
       fill(0,0,0);
-      //show time with trackpoints
+      //show text beside the trackpoints
       //text(trackpoint1.time.getTime().getDate()  + " " + trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
-      //text(trackpoint1.time.getTime() + " " + trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
-      text("superpoints: " + trackpointsCounter, punkt1.x - 4, punkt1.y + 5);
-
+      text(trackpoint1.time.getTime() +"", punkt1.x - 4, punkt1.y + 5);
+      //text("trackpointsCounter: " + trackpointsCounter, punkt1.x - 4, punkt1.y + 5);
+      
+      
+      
+      boolean found = false;
+      
+      for (int j = 0; j < amountbubbles.size(); j++) {
+       Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
+       if(bubbletemp.equalsOther(trackpoint1.location)) {
+         bubbletemp.increaseSize();
+         found = true;
+         break;
+       }
+      }
+      
+      if (!found) {
+        Amountbubble amountbubble = new Amountbubble(trackpoint1.location);
+        amountbubbles.add(amountbubble);
+      }
+      
+      for(int i = 0; i < amountbubbles.size(); i++) {
+        Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(i);
+        bubbletemp.draw(map);
+      }
     }
     //
-    //while (trackpointsCounter < trackpoints.size()) {
+    if (trackpointsCounter < trackpoints.size()-5) {
       trackpointsCounter++;
-    //}
+    }
   
 }
 
