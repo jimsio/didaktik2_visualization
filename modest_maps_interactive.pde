@@ -24,17 +24,24 @@ Button[] buttons = {
 PFont font;
 String[] trackdata;
 ArrayList trackpoints;
-ArrayList trackpointstemp;
 ArrayList amountbubbles;
 boolean showgui = true; //showing all the buttons/points/tracks
 boolean showmap = true; //show map
 boolean tracking = true; //true: Malte Spitz moving
+int trackpointsCounter = 0;
+
+
+
+/* ################ */
+/*       Setup      */
+/* ################ */
+
 
 void setup() {
   size(800, 600);
   smooth();
   //frameRate(20);
-  
+
   amountbubbles = new ArrayList(); //create empty ArrayList
 
   //load the csv-file with Malte Spitz' location data
@@ -71,6 +78,12 @@ void setup() {
   );
 }
 
+
+/* ################ */
+/*      Classes     */
+/* ################ */
+
+
 //Class for storing time, service and location of Malte Spitz
 class Trackpoint {
   GregorianCalendar time;
@@ -92,7 +105,11 @@ class Trackpoint {
 }
 
 
-//everything that should be drawn comes in here
+/* ################ */
+/*      Drawing     */
+/* ################ */
+
+
 void draw() {
   background(0);
 
@@ -101,8 +118,7 @@ void draw() {
     map.draw();
   }
 
-  smooth();
-  
+
   // draw all the buttons and check for mouse-over
   boolean hand = false;
   if (showgui) {
@@ -112,9 +128,8 @@ void draw() {
     }
   }
 
-  // if we're over a button, use the finger pointer
+  // when pointer over button, use the finger pointer
   // otherwise use the cross
-  // (I wish Java had the open/closed hand for "move" cursors)
   cursor(hand ? HAND : CROSS);
 
   // see if the arrow keys or +/- keys are pressed:
@@ -174,60 +189,61 @@ void draw() {
      fill(0,255,255);
      stroke(255,255,0);
      ellipse(punkt.x, punkt.y, 10, 10);*/
-     
-     
-     
-     beginShape(POINTS);
-     vertex(30, 20);
-     vertex(85, 20);
-     vertex(85, 75);
-     vertex(30, 75);
-     endShape();
+
+
+
+    beginShape(POINTS);
+    vertex(30, 20);
+    vertex(85, 20);
+    vertex(85, 75);
+    vertex(30, 75);
+    endShape();
 
 
     //Iterate through the trackpoints and show them on the map
     //problem: showing all point (more than 17400 in total) need a lot of cpu and slows down everything)
 
-//    Amountbubble amountbubble1 = new Amountbubble(52.518, 13.392);
-//    Amountbubble amountbubble2 = new Amountbubble(52.505, 13.451);
-//    amountbubble1.draw();
-//    amountbubble2.draw();
-    
+    //Amountbubble amountbubble1 = new Amountbubble(52.53027778; 13.37472222);
+    //    Amountbubble amountbubble2 = new Amountbubble(52.505, 13.451);
+    //amountbubble1.draw();
+    //    amountbubble2.draw();
+
     /*if (ball1.intersect(ball2)) {
-    ball1.highlight();
-    ball2.highlight();
-    }*/
+     ball1.highlight();
+     ball2.highlight();
+     }*/
 
     //show some (~1450) trackpoints as transparent circles
     for (int i = 0; i <= trackpoints.size()-16000; i++) { 
-       // An ArrayList doesn't know what it is storing so we have 
-       // to cast the object coming out
-       Trackpoint trackpoint = (Trackpoint) trackpoints.get(i);
-       Point2f punkt = map.locationPoint(trackpoint.location);
-       fill(0,255,255);
-       stroke(255,255,0);
-       //ellipse(punkt.x, punkt.y, 8, 8);
-       
-       Amountbubble amountbubble = new Amountbubble(round(punkt.x*1000)/1000, round(punkt.y*1000)/1000);
-       amountbubble.draw();
-       
-       
-       
-       /*if(amountbubbles.size() == 0) {
-           amountbubbles.add(amountbubble);
+      // An ArrayList doesn't know what it is storing so we have 
+      // to cast the object coming out
+      Trackpoint trackpoint = (Trackpoint) trackpoints.get(i);
+      Point2f punkt = map.locationPoint(trackpoint.location);
+      fill(0,255,255);
+      stroke(255,255,0);
+      //ellipse(punkt.x, punkt.y, 8, 8);
+
+      //Amountbubble amountbubble = new Amountbubble(round(punkt.x*1000)/1000, round(punkt.y*1000)/1000);
+      //amountbubble.draw();
+
+
+
+      /*if(amountbubbles.size() == 0) {
+       amountbubbles.add(amountbubble);
        }*/
-       
-       /*for (int j = 0; j < amountbubbles.size(); j++) {
-         Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
-         if(bubbletemp.x == amountbubble.x && bubbletemp.y == amountbubble.y) {
-           bubbletemp.increaseSize();
-         }
-         else {
-           amountbubbles.add(amountbubble);
-         }
+
+      /*for (int j = 0; j < amountbubbles.size(); j++) {
+       Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
+       if(bubbletemp.x == amountbubble.x && bubbletemp.y == amountbubble.y) {
+       bubbletemp.increaseSize();
+       }
+       else {
+       amountbubbles.add(amountbubble);
+       }
        }*/
-       
     }
+    
+  }
 
 
     //zuerst zeichnen, aus array löschen, beim nächsten schauen ob in der nähe von einem bestehenden
@@ -237,63 +253,65 @@ void draw() {
 
 
 
-  //TODO: copy Arraylist - here i point to the same object
-  //trackpointstemp = trackpoints;
+    //TODO: copy Arraylist - here i point to the same object
+    //trackpointstemp = trackpoints;
 
-  if (tracking) {
-    //show and connect five points in order of appearance
-    //for (int i = 0; i <= trackpointstemp.size()-1; i++) {  
-      
-    //TODO: won't work like this when trackpointstemp is finaly empty
-    for(int i = 0; i <= trackpoints.size()-10; i++) {
-    
-      Trackpoint trackpoint1 = (Trackpoint) trackpoints.get(i);
-      Trackpoint trackpoint2 = (Trackpoint) trackpoints.get(i+1);
-      Trackpoint trackpoint3 = (Trackpoint) trackpoints.get(i+2);
-      Trackpoint trackpoint4 = (Trackpoint) trackpoints.get(i+3);
-      Trackpoint trackpoint5 = (Trackpoint) trackpoints.get(i+4);
-  
+    if (tracking) {
+      //show and connect five points in order of appearance
+      Trackpoint trackpoint1 = (Trackpoint) trackpoints.get(trackpointsCounter);
+      Trackpoint trackpoint2 = (Trackpoint) trackpoints.get(trackpointsCounter+1);
+      Trackpoint trackpoint3 = (Trackpoint) trackpoints.get(trackpointsCounter+2);
+      Trackpoint trackpoint4 = (Trackpoint) trackpoints.get(trackpointsCounter+3);
+      Trackpoint trackpoint5 = (Trackpoint) trackpoints.get(trackpointsCounter+4);
+
       Point2f punkt1 = map.locationPoint(trackpoint1.location);
       Point2f punkt2 = map.locationPoint(trackpoint2.location);
       Point2f punkt3 = map.locationPoint(trackpoint3.location);
       Point2f punkt4 = map.locationPoint(trackpoint4.location);
       Point2f punkt5 = map.locationPoint(trackpoint5.location);
-  
+
       //fill (R, G, B, alpha)
       fill(102,102,102, 80);
       noStroke();
-  
+
       ellipse(punkt1.x, punkt1.y, 15, 15);
       ellipse(punkt2.x, punkt2.y, 10, 10);
       ellipse(punkt3.x, punkt3.y, 10, 10);
       ellipse(punkt4.x, punkt4.y, 10, 10);
       ellipse(punkt5.x, punkt5.y, 10, 10);
-  
-  
+
+
       strokeWeight(2);
       stroke(102,102,102, 90);
       line(punkt1.x, punkt1.y, punkt2.x, punkt2.y);
       line(punkt2.x, punkt2.y, punkt3.x, punkt3.y);
       line(punkt3.x, punkt3.y, punkt4.x, punkt4.y);
       line(punkt4.x, punkt4.y, punkt5.x, punkt5.y);
-  
-  
+
+
       fill(0,0,0);
-      
+      //show time with trackpoints
       //text(trackpoint1.time.getTime().getDate()  + " " + trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
       //text(trackpoint1.time.getTime() + " " + trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
-      //text(trackpoint1.time.getTime() + " " + trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
-      
-      //trackpoints.remove(0);
+      text("superpoints: " + trackpointsCounter, punkt1.x - 4, punkt1.y + 5);
+
     }
-  }
-}  
+    //
+    //while (trackpointsCounter < trackpoints.size()) {
+      trackpointsCounter++;
+    //}
+  
+}
+
+
+/* ################ */
+/* General Settings */
+/* ################ */
+
 
 //Printing the current mouse position to stdout
 //println((float)map.sc);
 //println((float)map.tx + " " + (float)map.ty);
-
-}
 
 void keyReleased() {
   //g for switching between map and map with controls and points
