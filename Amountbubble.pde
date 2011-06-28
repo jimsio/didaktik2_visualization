@@ -4,7 +4,7 @@ class Amountbubble {
   public Amountbubble(float x, float y) {
     this.x = x;
     this.y = y;
-    this.size = 5;
+    this.size = 40;
   }
 
   void increaseSize() {
@@ -17,7 +17,7 @@ class Amountbubble {
 
   void draw() {
     noStroke();
-    fill(0,255,255, 40);
+    fill(0,255,255, 4);
     ellipse(x,y,size,size);
   }
 }

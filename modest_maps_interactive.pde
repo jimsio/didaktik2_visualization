@@ -28,7 +28,7 @@ ArrayList trackpointstemp;
 ArrayList amountbubbles;
 boolean showgui = true; //showing all the buttons/points/tracks
 boolean showmap = true; //show map
-boolean tracking = false; //true: Malte Spitz moving
+boolean tracking = true; //true: Malte Spitz moving
 
 void setup() {
   size(800, 600);
@@ -47,10 +47,10 @@ void setup() {
   }
 
   // create a new map, optionally specify a provider
+  //map = new InteractiveMap(this, new OpenStreetMapProvider());
   map = new InteractiveMap(this, new OpenStreetMapProvider());
   // TODO: maybe change the appearance of OpenStreetMap to something less distractive
-  // Microsoft.RoadProvider
-  // others would be "new Microsoft.HybridProvider()" or "new Microsoft.AerialProvider()"
+  // others would be "new Microsoft.RoadProvider" or "new Microsoft.HybridProvider()" or "new Microsoft.AerialProvider()"
   // the Google ones get blocked after a few hundred tiles
   // the Yahoo ones look terrible because they're not 256px squares :)
 
@@ -174,91 +174,118 @@ void draw() {
      fill(0,255,255);
      stroke(255,255,0);
      ellipse(punkt.x, punkt.y, 10, 10);*/
+     
+     
+     
+     beginShape(POINTS);
+     vertex(30, 20);
+     vertex(85, 20);
+     vertex(85, 75);
+     vertex(30, 75);
+     endShape();
 
 
     //Iterate through the trackpoints and show them on the map
-    //problem: showing all point (more than 17000 in total) slows zooming down extremely)
+    //problem: showing all point (more than 17400 in total) need a lot of cpu and slows down everything)
 
+//    Amountbubble amountbubble1 = new Amountbubble(52.518, 13.392);
+//    Amountbubble amountbubble2 = new Amountbubble(52.505, 13.451);
+//    amountbubble1.draw();
+//    amountbubble2.draw();
     
-//
-//    for (int i = 0; i <= trackpoints.size()-1; i++) { 
-//       // An ArrayList doesn't know what it is storing so we have 
-//       // to cast the object coming out
-//       Trackpoint trackpoint = (Trackpoint) trackpoints.get(i);
-//       Point2f punkt = map.locationPoint(trackpoint.location);
-//       fill(0,255,255);
-//       stroke(255,255,0);
-//       
-//       Amountbubble amountbubble = new Amountbubble(round(punkt.x*1000)/1000, round(punkt.y*1000)/1000);
-//       //ellipse(punkt.x, punkt.y, 8, 8);
-//       //amountbubble.draw();
-//       
-//       if(amountbubbles.size() == 0) {
-//           amountbubbles.add(amountbubble);
-//       }
-//       
-//       for (int j = 0; j < amountbubbles.size(); j++) {
-//         Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
-//         if(bubbletemp.x == amountbubble.x && bubbletemp.y == amountbubble.y) {
-//           bubbletemp.increaseSize();
-//         }
-//         else {
-//           amountbubbles.add(amountbubble);
-//         }
-//       }
-//       
-//    }
+    /*if (ball1.intersect(ball2)) {
+    ball1.highlight();
+    ball2.highlight();
+    }*/
+
+    //show some (~1450) trackpoints as transparent circles
+    for (int i = 0; i <= trackpoints.size()-16000; i++) { 
+       // An ArrayList doesn't know what it is storing so we have 
+       // to cast the object coming out
+       Trackpoint trackpoint = (Trackpoint) trackpoints.get(i);
+       Point2f punkt = map.locationPoint(trackpoint.location);
+       fill(0,255,255);
+       stroke(255,255,0);
+       //ellipse(punkt.x, punkt.y, 8, 8);
+       
+       Amountbubble amountbubble = new Amountbubble(round(punkt.x*1000)/1000, round(punkt.y*1000)/1000);
+       amountbubble.draw();
+       
+       
+       
+       /*if(amountbubbles.size() == 0) {
+           amountbubbles.add(amountbubble);
+       }*/
+       
+       /*for (int j = 0; j < amountbubbles.size(); j++) {
+         Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
+         if(bubbletemp.x == amountbubble.x && bubbletemp.y == amountbubble.y) {
+           bubbletemp.increaseSize();
+         }
+         else {
+           amountbubbles.add(amountbubble);
+         }
+       }*/
+       
+    }
 
 
     //zuerst zeichnen, aus array löschen, beim nächsten schauen ob in der nähe von einem bestehenden
-  
     //TODO: Zeiteingabe von wann bis wann er durchlaufen soll
 
 
 
 
 
-  //TODO: copy Arraylist - here i point to the same object:
-  trackpointstemp = trackpoints;
+  //TODO: copy Arraylist - here i point to the same object
+  //trackpointstemp = trackpoints;
 
   if (tracking) {
     //show and connect five points in order of appearance
     //for (int i = 0; i <= trackpointstemp.size()-1; i++) {  
-    int i = 0;
-    Trackpoint trackpoint1 = (Trackpoint) trackpointstemp.get(i);
-    Trackpoint trackpoint2 = (Trackpoint) trackpointstemp.get(i+1);
-    Trackpoint trackpoint3 = (Trackpoint) trackpointstemp.get(i+2);
-    Trackpoint trackpoint4 = (Trackpoint) trackpointstemp.get(i+3);
-    Trackpoint trackpoint5 = (Trackpoint) trackpointstemp.get(i+4);
-
-    Point2f punkt1 = map.locationPoint(trackpoint1.location);
-    Point2f punkt2 = map.locationPoint(trackpoint2.location);
-    Point2f punkt3 = map.locationPoint(trackpoint3.location);
-    Point2f punkt4 = map.locationPoint(trackpoint4.location);
-    Point2f punkt5 = map.locationPoint(trackpoint5.location);
-
-    //fill (R, G, B, alpha)
-    fill(102,102,102, 80);
-    noStroke();
-
-    ellipse(punkt1.x, punkt1.y, 15, 15);
-    ellipse(punkt2.x, punkt2.y, 10, 10);
-    ellipse(punkt3.x, punkt3.y, 10, 10);
-    ellipse(punkt4.x, punkt4.y, 10, 10);
-    ellipse(punkt5.x, punkt5.y, 10, 10);
-
-
-    strokeWeight(2);
-    stroke(102,102,102, 90);
-    line(punkt1.x, punkt1.y, punkt2.x, punkt2.y);
-    line(punkt2.x, punkt2.y, punkt3.x, punkt3.y);
-    line(punkt3.x, punkt3.y, punkt4.x, punkt4.y);
-    line(punkt4.x, punkt4.y, punkt5.x, punkt5.y);
-
-
-    fill(0,0,0);
-    text(trackpoint1.time.getTime().getDate() + " " + trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
-    trackpointstemp.remove(0);
+      
+    //TODO: won't work like this when trackpointstemp is finaly empty
+    for(int i = 0; i <= trackpoints.size()-10; i++) {
+    
+      Trackpoint trackpoint1 = (Trackpoint) trackpoints.get(i);
+      Trackpoint trackpoint2 = (Trackpoint) trackpoints.get(i+1);
+      Trackpoint trackpoint3 = (Trackpoint) trackpoints.get(i+2);
+      Trackpoint trackpoint4 = (Trackpoint) trackpoints.get(i+3);
+      Trackpoint trackpoint5 = (Trackpoint) trackpoints.get(i+4);
+  
+      Point2f punkt1 = map.locationPoint(trackpoint1.location);
+      Point2f punkt2 = map.locationPoint(trackpoint2.location);
+      Point2f punkt3 = map.locationPoint(trackpoint3.location);
+      Point2f punkt4 = map.locationPoint(trackpoint4.location);
+      Point2f punkt5 = map.locationPoint(trackpoint5.location);
+  
+      //fill (R, G, B, alpha)
+      fill(102,102,102, 80);
+      noStroke();
+  
+      ellipse(punkt1.x, punkt1.y, 15, 15);
+      ellipse(punkt2.x, punkt2.y, 10, 10);
+      ellipse(punkt3.x, punkt3.y, 10, 10);
+      ellipse(punkt4.x, punkt4.y, 10, 10);
+      ellipse(punkt5.x, punkt5.y, 10, 10);
+  
+  
+      strokeWeight(2);
+      stroke(102,102,102, 90);
+      line(punkt1.x, punkt1.y, punkt2.x, punkt2.y);
+      line(punkt2.x, punkt2.y, punkt3.x, punkt3.y);
+      line(punkt3.x, punkt3.y, punkt4.x, punkt4.y);
+      line(punkt4.x, punkt4.y, punkt5.x, punkt5.y);
+  
+  
+      fill(0,0,0);
+      
+      //text(trackpoint1.time.getTime().getDate()  + " " + trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
+      //text(trackpoint1.time.getTime() + " " + trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
+      //text(trackpoint1.time.getTime() + " " + trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
+      
+      //trackpoints.remove(0);
+    }
   }
 }  
 
