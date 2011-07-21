@@ -1,4 +1,3 @@
-import processing.core.*;
 import com.modestmaps.core.*;
 import com.modestmaps.geo.*;
 

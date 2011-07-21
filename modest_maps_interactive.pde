@@ -5,7 +5,20 @@
 // entirely up to date - you have been warned!
 //
 
-// this is the only bit that's needed to show a map:
+
+/*
+ TODO: am schluss wird der ball immer größer!!!
+ 2 Modi: (schnelldurchlauf, playbutton + live-durchlauf)
+ modi 2): durch tastendruck geschwindigkeit (framerate) änderbar
+ amountbubble-anzeige-modi (normal, mit highlight, mit tortendiagramm
+ 
+ 
+ Framework - Cheatsheet
+ + Kartendarstellung auswählbar
+*/
+
+
+// the map
 InteractiveMap map;
 
 // buttons take x,y and width,height:
@@ -29,7 +42,11 @@ boolean showgui = true; //showing all the buttons/points/tracks
 boolean showmap = true; //show map
 boolean tracking = true; //true: Malte Spitz moving
 int trackpointsCounter = 0;
+SimpleDateFormat dateformat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+int speed = 50;
 
+//Date startoffset;
+//Date endoffset;
 
 
 /* ################ */
@@ -40,17 +57,21 @@ int trackpointsCounter = 0;
 void setup() {
   size(800, 600);
   smooth();
-  frameRate(10000);
+  frameRate(speed);
 
   amountbubbles = new ArrayList(); //create empty ArrayList
-
+  //startoffset = new Date();
+  
   //load the csv-file with Malte Spitz' location data
   trackdata = loadStrings("ex_data.csv");
   trackpoints = new ArrayList(); //create empty ArrayList
   for (int i = 0; i < trackdata.length; i++) {
     String[] pieces = split(trackdata[i], ";"); //load each location into array
     //time | service | latitude | longitude
-    trackpoints.add(new Trackpoint (pieces));
+    Trackpoint t = new Trackpoint (pieces);
+    //if(t.time.getTime() < startoffset) {
+      trackpoints.add(t);
+    //}
   }
 
   // create a new map, optionally specify a provider
@@ -86,7 +107,7 @@ void setup() {
 
 //Class for storing time, service and location of Malte Spitz
 class Trackpoint {
-  GregorianCalendar time;
+  Date time;
   String service;
   Location location;
 
@@ -97,8 +118,8 @@ class Trackpoint {
     String[] date = split(datetime[0], "/"); //date[0]=8 date[1]=31
     String[] hoursminutes = split(datetime[1], ":"); //hoursminutes[0]=8 [1]=09
 
-    // new GregorianCalendar(YEAR, MONTH, DAY, HOUR, MINUTE)
-    this.time = new GregorianCalendar(int(date[2])+2000, int(date[0])-1, int(date[1]), int(hoursminutes[0]), int(hoursminutes[1]));
+    // new Date(YEAR, MONTH, DAY, HOUR, MINUTE)
+    this.time = new Date(int(date[2])+2000, int(date[0])-1, int(date[1]), int(hoursminutes[0]), int(hoursminutes[1]));
     this.service = pieces[1];
     this.location = new Location(float(pieces[2]), float(pieces[3]));
   }
@@ -111,7 +132,7 @@ class Trackpoint {
 
 
 void draw() {
-  background(0);
+  background(230);
 
   if (showmap) {
     // draw the map:
@@ -160,175 +181,108 @@ void draw() {
   if (showgui) {
     textFont(font, 12);
 
+    fill(200);
+    noStroke();
+    rect(0, height-g.textSize-8, width, g.textSize+8);
+        
+    stroke(150);
+    strokeWeight(1);
+    line(0, height-g.textSize-8, width, height-g.textSize-8) ;
+
     // grab the lat/lon location under the mouse point:
     Location location = map.pointLocation(mouseX, mouseY);
 
-    // draw the mouse location, bottom left:
-    fill(0);
-    noStroke();
-    rect(5, height-5-g.textSize, textWidth("mouse: " + location), g.textSize+textDescent());
-    fill(255,255,0);
+    // draw the mouse location, bottom left:    
+    fill(50);
     textAlign(LEFT, BOTTOM);
-    text("mouse: " + location, 5, height-5);
-
+    text("mouse: " + location, 3, height-3);
+    
     // grab the center
     location = map.pointLocation(width/2, height/2);
 
-    fill(0);
-    noStroke();
-    float rw = textWidth("map: " + location);
-    rect(width-5-rw, height-5-g.textSize, rw, g.textSize+textDescent());
-    fill(255,255,0);
+    fill(50);
     textAlign(RIGHT, BOTTOM);
     //show number trackpoints in trackpoints[]
-    text("# trackpointcounter: " + trackpointsCounter, width-5, height-5);
-
-    //draw point at a location.
-    /* Location location2 = new Location(52.52944444, 13.39611111);
-     Point2f punkt = map.locationPoint(location2);
-     fill(0,255,255);
-     stroke(255,255,0);
-     ellipse(punkt.x, punkt.y, 10, 10);*/
-
-
-
-    beginShape(POINTS);
-    vertex(30, 20);
-    vertex(85, 20);
-    vertex(85, 75);
-    vertex(30, 75);
-    endShape();
-
-
-    //Iterate through the trackpoints and show them on the map
-    //problem: showing all point (more than 17400 in total) need a lot of cpu and slows down everything)
-
-    //Amountbubble amountbubble1 = new Amountbubble(52.53027778; 13.37472222);
-    //    Amountbubble amountbubble2 = new Amountbubble(52.505, 13.451);
-    //amountbubble1.draw();
-    //    amountbubble2.draw();
-
-    /*if (ball1.intersect(ball2)) {
-     ball1.highlight();
-     ball2.highlight();
-     }*/
-
-    //show some (~1450) trackpoints as transparent circles
-    //for (int i = 0; i < trackpoints.size(); i++) { 
-      // An ArrayList doesn't know what it is storing so we have 
-      // to cast the object coming out
-      //Trackpoint trackpoint = (Trackpoint) trackpoints.get(i);
-      //Point2f punkt = map.locationPoint(trackpoint.location);
-      //fill(0,255,255);
-      //stroke(255,255,0);
-      //ellipse(punkt.x, punkt.y, 8, 8);
-
-
-//
-//      boolean found = false;
-//      
-//      for (int j = 0; j < amountbubbles.size(); j++) {
-//       Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
-//       if(bubbletemp.equalsOther(punkt)) {
-//         bubbletemp.increaseSize();
-//         found = true;
-//         break;
-//       }
-//      }
-//      
-//      if (!found) {
-//        Amountbubble amountbubble = new Amountbubble(punkt);
-//        //round(punkt.x*100000)/100000, round(punkt.y*100000)/100000);
-//        amountbubbles.add(amountbubble);
-//        amountbubble.draw();
-//      }
-       
-       
-    //}
-    
+    text("# trackpointcounter: " + trackpointsCounter, width-3, height-3);
   }
 
+  if (tracking) {
+    //show and connect five points in order of appearance
+    Trackpoint trackpoint1 = (Trackpoint) trackpoints.get(trackpointsCounter);
+    Trackpoint trackpoint2 = (Trackpoint) trackpoints.get(trackpointsCounter+1);
+    Trackpoint trackpoint3 = (Trackpoint) trackpoints.get(trackpointsCounter+2);
+    Trackpoint trackpoint4 = (Trackpoint) trackpoints.get(trackpointsCounter+3);
+    Trackpoint trackpoint5 = (Trackpoint) trackpoints.get(trackpointsCounter+4);
 
-    //zuerst zeichnen, aus array löschen, beim nächsten schauen ob in der nähe von einem bestehenden
-    //TODO: Zeiteingabe von wann bis wann er durchlaufen soll
+    Point2f punkt1 = map.locationPoint(trackpoint1.location);
+    Point2f punkt2 = map.locationPoint(trackpoint2.location);
+    Point2f punkt3 = map.locationPoint(trackpoint3.location);
+    Point2f punkt4 = map.locationPoint(trackpoint4.location);
+    Point2f punkt5 = map.locationPoint(trackpoint5.location);
 
+    //fill (R, G, B, alpha)
+    fill(102,102,102, 80);
+    noStroke();
 
-
-    //TODO: copy Arraylist - here i point to the same object
-    //trackpointstemp = trackpoints;
-
-    if (tracking) {
-      //show and connect five points in order of appearance
-      Trackpoint trackpoint1 = (Trackpoint) trackpoints.get(trackpointsCounter);
-      Trackpoint trackpoint2 = (Trackpoint) trackpoints.get(trackpointsCounter+1);
-      Trackpoint trackpoint3 = (Trackpoint) trackpoints.get(trackpointsCounter+2);
-      Trackpoint trackpoint4 = (Trackpoint) trackpoints.get(trackpointsCounter+3);
-      Trackpoint trackpoint5 = (Trackpoint) trackpoints.get(trackpointsCounter+4);
-
-      Point2f punkt1 = map.locationPoint(trackpoint1.location);
-      Point2f punkt2 = map.locationPoint(trackpoint2.location);
-      Point2f punkt3 = map.locationPoint(trackpoint3.location);
-      Point2f punkt4 = map.locationPoint(trackpoint4.location);
-      Point2f punkt5 = map.locationPoint(trackpoint5.location);
-
-      //fill (R, G, B, alpha)
-      fill(102,102,102, 80);
-      noStroke();
-
-      ellipse(punkt1.x, punkt1.y, 15, 15);
-      ellipse(punkt2.x, punkt2.y, 10, 10);
-      ellipse(punkt3.x, punkt3.y, 10, 10);
-      ellipse(punkt4.x, punkt4.y, 10, 10);
-      ellipse(punkt5.x, punkt5.y, 10, 10);
+    ellipse(punkt1.x, punkt1.y, 15, 15);
+    ellipse(punkt2.x, punkt2.y, 10, 10);
+    ellipse(punkt3.x, punkt3.y, 10, 10);
+    ellipse(punkt4.x, punkt4.y, 10, 10);
+    ellipse(punkt5.x, punkt5.y, 10, 10);
 
 
-      strokeWeight(2);
-      stroke(102,102,102, 90);
-      line(punkt1.x, punkt1.y, punkt2.x, punkt2.y);
-      line(punkt2.x, punkt2.y, punkt3.x, punkt3.y);
-      line(punkt3.x, punkt3.y, punkt4.x, punkt4.y);
-      line(punkt4.x, punkt4.y, punkt5.x, punkt5.y);
+    strokeWeight(2);
+    stroke(102,102,102, 80);
+    line(punkt1.x, punkt1.y, punkt2.x, punkt2.y);
+    line(punkt2.x, punkt2.y, punkt3.x, punkt3.y);
+    line(punkt3.x, punkt3.y, punkt4.x, punkt4.y);
+    line(punkt4.x, punkt4.y, punkt5.x, punkt5.y);
 
 
-      fill(0,0,0);
-      //show text beside the trackpoints
-      //text(trackpoint1.time.getTime().getDate()  + " " + trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
-      text(trackpoint1.time.getTime() +"", punkt1.x - 4, punkt1.y + 5);
-      //text("trackpointsCounter: " + trackpointsCounter, punkt1.x - 4, punkt1.y + 5);
-      
-      
-      
-      boolean found = false;
-      
-      for (int j = 0; j < amountbubbles.size(); j++) {
-       Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
-       if(bubbletemp.equalsOther(trackpoint1.location)) {
-         bubbletemp.increaseSize();
-         found = true;
-         break;
-       }
-      }
-      
-      if (!found) {
-        Amountbubble amountbubble = new Amountbubble(trackpoint1.location);
-        amountbubbles.add(amountbubble);
-      }
-      
-      for(int i = 0; i < amountbubbles.size(); i++) {
-        Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(i);
-        bubbletemp.draw(map);
+    fill(0,0,0);
+    // text shown next to trackpoint
+    //text(trackpoint1.time.getTime().getDate()  + " " + trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
+    text(dateformat.format(trackpoint1.time.getTime()) +"", punkt1.x - 4, punkt1.y + 5);
+
+    boolean found = false;
+
+    for (int j = 0; j < amountbubbles.size(); j++) {
+      Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
+      if(bubbletemp.equalsOther(trackpoint1.location)) {
+        bubbletemp.increaseSize();
+        if(trackpoint1.service.contains("Telefonie")) {
+          bubbletemp.increaseCallCounter();
+        }
+        else if(trackpoint1.service.contains("GPRS")) {
+          bubbletemp.increaseGprsCounter();
+        }
+        else if(trackpoint1.service.contains("SMS")) {
+          bubbletemp.increaseSmsCounter();
+        }        
+        found = true;
+        break;
       }
     }
-    //
-    if (trackpointsCounter < trackpoints.size()-5) {
-      trackpointsCounter++;
+
+    if (!found) {
+      Amountbubble amountbubble = new Amountbubble(trackpoint1.location);
+      amountbubbles.add(amountbubble);
     }
-  
+
+    for(int i = 0; i < amountbubbles.size(); i++) {
+      Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(i);
+      bubbletemp.draw(map, bubbletemp.equalsOther(trackpoint1.location));
+    }
+  }
+  // 
+  if (trackpointsCounter < trackpoints.size()-5) {
+    trackpointsCounter++;
+  }
 }
 
 
 /* ################ */
-/* General Settings */
+/*     Controls     */
 /* ################ */
 
 
@@ -337,30 +291,31 @@ void draw() {
 //println((float)map.tx + " " + (float)map.ty);
 
 void keyReleased() {
-  //g for switching between map and map with controls and points
+  //g for showing/unshowing controls and points
   if (key == 'g' || key == 'G') {
     showgui = !showgui;
   }
+  // Drücke "S" um einen Screenshot zu speichern
   else if (key == 's' || key == 'S') {
-    save("screenshot.png");
+    save("screenshot_"+timestamp()+".jpg");
   }
-  else if (key == 'z' || key == 'Z') {
+  /*else if (key == 'z' || key == 'Z') {
     map.sc = pow(2, map.getZoom());
   }
   else if (key == ' ') {
     map.sc = 2.0;
     map.tx = -128;
     map.ty = -128;
-  }
+  }*/
   else if (key == 'm') {
     showmap = !showmap;
   }
-  else if (key == '+') {
+  /*else if (key == '+') {
     //faster speed
   }
   else if (key == '-') {
     //slower speed
-  }
+  }*/
 }
 
 
@@ -410,3 +365,12 @@ void mouseClicked() {
   }
 }
 
+
+/* #################################### */
+/*     Additional Userful Functions     */
+/* #################################### */
+
+String timestamp() {
+  Calendar now = Calendar.getInstance();
+  return String.format("%1$ty%1$tm%1$td_%1$tH%1$tM%1$tS", now);
+}
