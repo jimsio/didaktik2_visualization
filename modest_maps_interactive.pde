@@ -1,52 +1,91 @@
-
-//
-// This is a test of the interactive Modest Maps library for Processing
-// the modestmaps.jar in the code folder of this sketch might not be 
-// entirely up to date - you have been warned!
-//
+/*
+ 
+ ## Visualisierung der Handydaten von Malte Spitz ##
+ 
+ Interaktionen:
+ 
+ 
+ Pfeiltasten zum Bewegen der Karte
+ +/-/Mausrad - Ein/Auszoomen
+ M - Karte ein/ausschalten
+ G - Menüs ein/ausschalten
+ P/O - schnellerer/langsamerer Durchlauf
+ S - Screenshot speichern
+ 
+ */
 
 
 /*
- TODO: am schluss wird der ball immer größer!!!
  2 Modi: (schnelldurchlauf, playbutton + live-durchlauf)
- modi 2): durch tastendruck geschwindigkeit (framerate) änderbar
- amountbubble-anzeige-modi (normal, mit highlight, mit tortendiagramm
+ amountbubble-anzeige-modi (heatmap, normal, mit highlight, mit tortendiagramm)
+ 
+ 
+ Häufigkeit an einem frei gewählten Punkt - z.B. Reichstag (mit Angabe von Radius um diesen Punkt)
+ 
+ Telefon zeichnen, wenn Telefoniert wurde - 01001 bei Daten, Brief bei SMS
  
  
  Framework - Cheatsheet
  + Kartendarstellung auswählbar
-*/
+ 
+ + Kuchendiagramm für die Services
+ + Farben, Formen auswählen
+ 
+ */
 
 
-// the map
+// Landkarte
 InteractiveMap map;
 
-// buttons take x,y and width,height:
-ZoomButton out = new ZoomButton(5,5,14,14,false);
-ZoomButton in = new ZoomButton(22,5,14,14,true);
-PanButton up = new PanButton(14,25,14,14,UP);
-PanButton down = new PanButton(14,57,14,14,DOWN);
-PanButton left = new PanButton(5,41,14,14,LEFT);
-PanButton right = new PanButton(22,41,14,14,RIGHT);
+// Bühnengröße einstellen
+int stageWidth = 800;
+int stageHeight = 600;
 
-// all the buttons in one place, for looping:
+// buttons take x,y and width,height:
+ZoomButton out = new ZoomButton(5, 5, 14, 14, false);
+ZoomButton in = new ZoomButton(22, 5, 14, 14, true);
+PanButton up = new PanButton(14, 25, 14, 14, UP);
+PanButton down = new PanButton(14, 57, 14, 14, DOWN);
+PanButton left = new PanButton(5, 41, 14, 14, LEFT);
+PanButton right = new PanButton(22, 41, 14, 14, RIGHT);
+PlayButton play = new PlayButton(stageWidth, stageHeight);
+
+// Steuerungsbuttons
 Button[] buttons = { 
-  in, out, up, down, left, right
+  in, out, up, down, left, right, play
 };
 
 PFont font;
 String[] trackdata;
 ArrayList trackpoints;
 ArrayList amountbubbles;
-boolean showgui = true; //showing all the buttons/points/tracks
-boolean showmap = true; //show map
-boolean tracking = true; //true: Malte Spitz moving
+boolean showgui = true; // true: Zeigt die Bedienoberfläche an
+boolean showmap = true; // true: Zeigt die Karte an
+boolean increaseBubbles = true; // true: Bubbles werden vergrößert
+boolean tracking = false; // true: Malte Spitz bewegt sich
 int trackpointsCounter = 0;
 SimpleDateFormat dateformat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-int speed = 50;
+Date startoffset = new Date();
+Date endoffset = new Date();
+int speed = 20;
 
-//Date startoffset;
-//Date endoffset;
+// 1 = Datumsfilter
+// 2 = Stundenfilter
+// 3 = kein Filter
+int filterSwitch = 1;
+
+// 1- Datumsfilter - Zeitspanne von-bis
+String beginnDate = "01.12.2009 04:05:06";
+String endDate = "28.01.2010 00:00:00";
+
+// 2- Stundenfilter - Stundengrenzen von-bis 
+int beginnHour = 23;
+int endHour = 2;
+
+
+
+
+
 
 
 /* ################ */
@@ -55,13 +94,18 @@ int speed = 50;
 
 
 void setup() {
-  size(800, 600);
+  size(stageWidth, stageHeight);
   smooth();
-  frameRate(speed);
 
   amountbubbles = new ArrayList(); //create empty ArrayList
-  //startoffset = new Date();
-  
+
+    try {
+    startoffset = dateformat.parse(beginnDate);
+    endoffset = dateformat.parse(endDate);
+  }
+  catch(ParseException e) {
+  }
+
   //load the csv-file with Malte Spitz' location data
   trackdata = loadStrings("ex_data.csv");
   trackpoints = new ArrayList(); //create empty ArrayList
@@ -69,28 +113,46 @@ void setup() {
     String[] pieces = split(trackdata[i], ";"); //load each location into array
     //time | service | latitude | longitude
     Trackpoint t = new Trackpoint (pieces);
-    //if(t.time.getTime() < startoffset) {
+    switch(filterSwitch) {
+    case 1: 
+      if (t.time.after(startoffset) && t.time.before(endoffset)) {
+        trackpoints.add(t);
+      }
+      break;
+    case 2:
+      if (beginnHour > endHour) {
+        if (t.time.getHours() >= beginnHour || t.time.getHours() < endHour) {
+          trackpoints.add(t);
+        }
+      }
+      else {
+        if (t.time.getHours() >= beginnHour && t.time.getHours() < endHour) {
+          trackpoints.add(t);
+        }
+      }
+      break;
+
+    case 3:
       trackpoints.add(t);
-    //}
+      break;
+    }
   }
 
-  // create a new map, optionally specify a provider
+  // Karte erzeugen und Darstellungsart/Anbieter auswählen
+  map = new InteractiveMap(this, new Microsoft.RoadProvider());
   //map = new InteractiveMap(this, new OpenStreetMapProvider());
-  map = new InteractiveMap(this, new Microsoft.RoadProvider()); //OpenStreetMapProvider());
-  // TODO: maybe change the appearance of OpenStreetMap to something less distractive
-  // others would be "new Microsoft.RoadProvider" or "new Microsoft.HybridProvider()" or "new Microsoft.AerialProvider()"
-  // the Google ones get blocked after a few hundred tiles
-  // the Yahoo ones look terrible because they're not 256px squares :)
+  //map = new InteractiveMap(this, new Microsoft.HybridProvider());
+  //map = new InteractiveMap(this, new Microsoft.AerialProvider());
 
-  // set the initial location and zoom level to Berlin (latitude/longitude), zoomlevel
+  // Startposition auf Berlin setzten (latitude/longitude), zoomlevel
   map.setCenterZoom(new Location(52.497832, 13.412933), 11);
-  // zoom 0 is the whole world, 19 is street level
-  // (try some out, or use getlatlon.com to search for more)
+  // zoomlevel 0 ist die ganze Welt, 19 ist Straßenniveau
+  // Koordinaten für Berlin gefunden unter: www.getlatlon.com
 
-  // set a default font for label
+  // Standardschriftart und Größe
   font = createFont("Helvetica", 12);
 
-  // enable the mouse wheel, for zooming
+  // Mausrad für Zoomen aktivieren
   addMouseWheelListener(new java.awt.event.MouseWheelListener() { 
     public void mouseWheelMoved(java.awt.event.MouseWheelEvent evt) { 
       mouseWheel(evt.getWheelRotation());
@@ -105,7 +167,7 @@ void setup() {
 /* ################ */
 
 
-//Class for storing time, service and location of Malte Spitz
+// Klasse um die Handydaten von Malte Spitz zu speichern
 class Trackpoint {
   Date time;
   String service;
@@ -114,12 +176,13 @@ class Trackpoint {
   //time | service | latitude | longitude
   public Trackpoint(String[] pieces) {
     //8/31/09 8:09
-    String[] datetime = split(pieces[0], " "); //datetime[0]=8/31/09 datetime[1]=8:09
-    String[] date = split(datetime[0], "/"); //date[0]=8 date[1]=31
-    String[] hoursminutes = split(datetime[1], ":"); //hoursminutes[0]=8 [1]=09
+    SimpleDateFormat track_format = new SimpleDateFormat("MM/dd/yy HH:mm");
 
-    // new Date(YEAR, MONTH, DAY, HOUR, MINUTE)
-    this.time = new Date(int(date[2])+2000, int(date[0])-1, int(date[1]), int(hoursminutes[0]), int(hoursminutes[1]));
+    try {
+      this.time = track_format.parse(pieces[0]);
+    }
+    catch(ParseException e) {
+    }
     this.service = pieces[1];
     this.location = new Location(float(pieces[2]), float(pieces[3]));
   }
@@ -132,10 +195,17 @@ class Trackpoint {
 
 
 void draw() {
+
+  //println("Geschwindigkeit: " +speed + "Framerate" + frameRate);
+
+  // Geschwindigkeit des Durchlaufs
+  frameRate(speed);
+
+  // Hintergrundfarbe
   background(230);
 
+  // Karte anzeigen/verbergen
   if (showmap) {
-    // draw the map:
     map.draw();
   }
 
@@ -178,85 +248,61 @@ void draw() {
     }
   }
 
-  if (showgui) {
-    textFont(font, 12);
-
-    fill(200);
-    noStroke();
-    rect(0, height-g.textSize-8, width, g.textSize+8);
-        
-    stroke(150);
-    strokeWeight(1);
-    line(0, height-g.textSize-8, width, height-g.textSize-8) ;
-
-    // grab the lat/lon location under the mouse point:
-    Location location = map.pointLocation(mouseX, mouseY);
-
-    // draw the mouse location, bottom left:    
-    fill(50);
-    textAlign(LEFT, BOTTOM);
-    text("mouse: " + location, 3, height-3);
-    
-    // grab the center
-    location = map.pointLocation(width/2, height/2);
-
-    fill(50);
-    textAlign(RIGHT, BOTTOM);
-    //show number trackpoints in trackpoints[]
-    text("# trackpointcounter: " + trackpointsCounter, width-3, height-3);
-  }
-
-  if (tracking) {
-    //show and connect five points in order of appearance
-    Trackpoint trackpoint1 = (Trackpoint) trackpoints.get(trackpointsCounter);
-    Trackpoint trackpoint2 = (Trackpoint) trackpoints.get(trackpointsCounter+1);
-    Trackpoint trackpoint3 = (Trackpoint) trackpoints.get(trackpointsCounter+2);
-    Trackpoint trackpoint4 = (Trackpoint) trackpoints.get(trackpointsCounter+3);
-    Trackpoint trackpoint5 = (Trackpoint) trackpoints.get(trackpointsCounter+4);
-
-    Point2f punkt1 = map.locationPoint(trackpoint1.location);
-    Point2f punkt2 = map.locationPoint(trackpoint2.location);
-    Point2f punkt3 = map.locationPoint(trackpoint3.location);
-    Point2f punkt4 = map.locationPoint(trackpoint4.location);
-    Point2f punkt5 = map.locationPoint(trackpoint5.location);
-
-    //fill (R, G, B, alpha)
-    fill(102,102,102, 80);
-    noStroke();
-
-    ellipse(punkt1.x, punkt1.y, 15, 15);
-    ellipse(punkt2.x, punkt2.y, 10, 10);
-    ellipse(punkt3.x, punkt3.y, 10, 10);
-    ellipse(punkt4.x, punkt4.y, 10, 10);
-    ellipse(punkt5.x, punkt5.y, 10, 10);
 
 
-    strokeWeight(2);
-    stroke(102,102,102, 80);
-    line(punkt1.x, punkt1.y, punkt2.x, punkt2.y);
-    line(punkt2.x, punkt2.y, punkt3.x, punkt3.y);
-    line(punkt3.x, punkt3.y, punkt4.x, punkt4.y);
-    line(punkt4.x, punkt4.y, punkt5.x, punkt5.y);
+  //show and connect five points in order of appearance
+  Trackpoint trackpoint1 = (Trackpoint) trackpoints.get(trackpointsCounter);
+  Trackpoint trackpoint2 = (Trackpoint) trackpoints.get(trackpointsCounter+1);
+  Trackpoint trackpoint3 = (Trackpoint) trackpoints.get(trackpointsCounter+2);
+  Trackpoint trackpoint4 = (Trackpoint) trackpoints.get(trackpointsCounter+3);
+  Trackpoint trackpoint5 = (Trackpoint) trackpoints.get(trackpointsCounter+4);
+
+  Point2f punkt1 = map.locationPoint(trackpoint1.location);
+  Point2f punkt2 = map.locationPoint(trackpoint2.location);
+  Point2f punkt3 = map.locationPoint(trackpoint3.location);
+  Point2f punkt4 = map.locationPoint(trackpoint4.location);
+  Point2f punkt5 = map.locationPoint(trackpoint5.location);
+
+  //fill (R, G, B, alpha)
+  fill(102, 102, 102, 80);
+  noStroke();
+
+  ellipse(punkt1.x, punkt1.y, 15, 15);
+  ellipse(punkt2.x, punkt2.y, 10, 10);
+  ellipse(punkt3.x, punkt3.y, 10, 10);
+  ellipse(punkt4.x, punkt4.y, 10, 10);
+  ellipse(punkt5.x, punkt5.y, 10, 10);
 
 
-    fill(0,0,0);
-    // text shown next to trackpoint
-    //text(trackpoint1.time.getTime().getDate()  + " " + trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
-    text(dateformat.format(trackpoint1.time.getTime()) +"", punkt1.x - 4, punkt1.y + 5);
+  strokeWeight(2);
+  stroke(102, 102, 102, 80);
+  line(punkt1.x, punkt1.y, punkt2.x, punkt2.y);
+  line(punkt2.x, punkt2.y, punkt3.x, punkt3.y);
+  line(punkt3.x, punkt3.y, punkt4.x, punkt4.y);
+  line(punkt4.x, punkt4.y, punkt5.x, punkt5.y);
 
-    boolean found = false;
 
+  
+  // Text neben dem sich bewegenden Trackpoint
+  
+  //fill(0, 0, 0);
+  //text(trackpoint1.time.getHours()+ "", punkt1.x - 4, punkt1.y + 5);
+  //text(dateformat.format(trackpoint1.time.getTime()) +" "+trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
+
+  boolean found = false;
+
+  if (increaseBubbles) {
     for (int j = 0; j < amountbubbles.size(); j++) {
       Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
-      if(bubbletemp.equalsOther(trackpoint1.location)) {
+      if (bubbletemp.equalsOther(trackpoint1.location)) {
         bubbletemp.increaseSize();
-        if(trackpoint1.service.contains("Telefonie")) {
+        if (trackpoint1.service.contains("Telefonie")) {
           bubbletemp.increaseCallCounter();
         }
-        else if(trackpoint1.service.contains("GPRS")) {
+        else if (trackpoint1.service.contains("GPRS")) {
           bubbletemp.increaseGprsCounter();
         }
-        else if(trackpoint1.service.contains("SMS")) {
+        else if (trackpoint1.service.contains("SMS")) {
           bubbletemp.increaseSmsCounter();
         }        
         found = true;
@@ -268,15 +314,54 @@ void draw() {
       Amountbubble amountbubble = new Amountbubble(trackpoint1.location);
       amountbubbles.add(amountbubble);
     }
-
-    for(int i = 0; i < amountbubbles.size(); i++) {
-      Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(i);
-      bubbletemp.draw(map, bubbletemp.equalsOther(trackpoint1.location));
-    }
   }
-  // 
-  if (trackpointsCounter < trackpoints.size()-5) {
+  for (int i = 0; i < amountbubbles.size(); i++) {
+    Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(i);
+    bubbletemp.draw(map, bubbletemp.equalsOther(trackpoint1.location));
+  }
+
+  // Trackpointzähler erhöhen bis alle Trackpoints angezeigt wurden
+  if (trackpointsCounter < trackpoints.size()-5 && tracking) {
     trackpointsCounter++;
+    increaseBubbles = true;
+  }
+  else {
+    increaseBubbles = false;
+  }
+
+  // show buttons and gui-bar
+  if (showgui) {
+
+    textFont(font, 12);
+
+    fill(200);
+    noStroke();
+    rect(0, height-g.textSize-8, width, g.textSize+8);
+
+    stroke(150);
+    strokeWeight(1);
+    line(0, height-g.textSize-8, width, height-g.textSize-8) ;
+
+    // grab the lat/lon location under the mouse point:
+    Location location = map.pointLocation(mouseX, mouseY);
+
+    // draw the mouse location, bottom left:    
+    fill(50);
+    textAlign(LEFT, BOTTOM);
+    text("Koordinaten " + location, 3, height-3);
+
+    // draw date of current trackoint, bottom center
+    fill(129, 80, 80);
+    textAlign(CENTER, BOTTOM);
+    text(dateformat.format(trackpoint1.time.getTime()) +"", width/2, height-3);
+
+    // show number trackpoints in trackpoints[], bottom right
+    fill(50);
+    textAlign(RIGHT, BOTTOM);
+    text("Trackpointzähler " + trackpointsCounter, width-3, height-3);
+
+    // grab the center
+    /*location = map.pointLocation(width/2, height/2);*/
   }
 }
 
@@ -295,27 +380,38 @@ void keyReleased() {
   if (key == 'g' || key == 'G') {
     showgui = !showgui;
   }
-  // Drücke "S" um einen Screenshot zu speichern
+  // Drücke "S" um einen Screenshot im Ordner "modest_maps_interactive" zu speichern
   else if (key == 's' || key == 'S') {
     save("screenshot_"+timestamp()+".jpg");
   }
-  /*else if (key == 'z' || key == 'Z') {
-    map.sc = pow(2, map.getZoom());
-  }
-  else if (key == ' ') {
-    map.sc = 2.0;
-    map.tx = -128;
-    map.ty = -128;
-  }*/
   else if (key == 'm') {
     showmap = !showmap;
   }
-  /*else if (key == '+') {
-    //faster speed
+  //"P" und "O" um Trackpoints schneller oder langsamer zu durchlaufen
+  else if (key == 'p') {
+    if (speed < 100) {
+      speed += 10;
+    }
   }
-  else if (key == '-') {
-    //slower speed
-  }*/
+  else if (key == 'o') {
+    if (speed > 10) {
+      speed -= 10;
+    }
+  }
+  // noch nicht fertig!!
+  else if (key == 'b') {
+    Location currentMouseLocation = map.pointLocation(mouseX, mouseY);
+    LocationBubble reichstag = new LocationBubble(currentMouseLocation, "cell_phone.svg");
+    reichstag.draw(map, false);
+  }
+  /*else if (key == 'z' || key == 'Z') {
+   map.sc = pow(2, map.getZoom());
+   }
+   else if (key == ' ') {
+   map.sc = 2.0;
+   map.tx = -128;
+   map.ty = -128;
+   }*/
 }
 
 
@@ -333,7 +429,7 @@ void mouseDragged() {
   }
 }
 
-// zoom in or out:
+// Mausrad für Ein- und Auszoomen
 void mouseWheel(int delta) {
   if (delta > 0) {
     map.sc *= 1.0/1.05;
@@ -363,6 +459,9 @@ void mouseClicked() {
   else if (right.mouseOver()) {
     map.panRight();
   }
+  else if (play.mouseOver()) {
+    tracking = !tracking;
+  }
 }
 
 
@@ -374,3 +473,4 @@ String timestamp() {
   Calendar now = Calendar.getInstance();
   return String.format("%1$ty%1$tm%1$td_%1$tH%1$tM%1$tS", now);
 }
+

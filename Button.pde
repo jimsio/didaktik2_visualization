@@ -18,6 +18,7 @@ class Button {
     stroke(80);
     fill(mouseOver() ? 255 : 220);
     rect(x,y,w,h); 
+    //ellipse(x,y,w,h); 
   }
   
 }
@@ -76,6 +77,27 @@ class PanButton extends Button {
         line(x+w-3,y+h/2,x+w-6,y+3+h/2);
         break;
     }
+  }
+  
+}
+
+class PlayButton extends Button {
+  PlayButton(int w, int h) {
+    //drawing a rectangle from superclass
+    super(w/2-16 , h-56, 28, 28);
+  }
+  
+  void draw() {
+    super.draw();
+    
+    //drawing a ellipse over the superclass rectangle
+    fill(mouseOver() ? 255 : 220);    
+    stroke(150);
+    ellipse(width/2-2, height-42, 40, 40);
+    
+    noStroke();
+    fill(120);
+    triangle(width/2-5, height-48, width/2-5, height-34, width/2+5, height-42);
   }
   
 }
