@@ -16,20 +16,19 @@
 
 
 /*
- 2 Modi: (schnelldurchlauf, playbutton + live-durchlauf)
- amountbubble-anzeige-modi (heatmap, normal, mit highlight, mit tortendiagramm)
- 
- 
+ TODO:
+ Service darstellen: Telefon zeichnen, wenn Telefoniert wurde - 01001 bei Daten, Brief bei SMS
  Häufigkeit an einem frei gewählten Punkt - z.B. Reichstag (mit Angabe von Radius um diesen Punkt)
- 
- Telefon zeichnen, wenn Telefoniert wurde - 01001 bei Daten, Brief bei SMS
- 
+ Auslagern von Methoden
+ 2 Modi: (schnelldurchlauf, playbutton + live-durchlauf)
  
  Framework - Cheatsheet
  + Kartendarstellung auswählbar
  
- + Kuchendiagramm für die Services
+ + 
  + Farben, Formen auswählen
+ + Amountbubble-anzeige-modi (heatmap, normal, mit highlight, mit tortendiagramm)
+ 
  
  */
 
@@ -56,18 +55,22 @@ Button[] buttons = {
 };
 
 PFont font;
+Trackpoint trackpoint1;
 String[] trackdata;
 ArrayList trackpoints;
 ArrayList amountbubbles;
-boolean showgui = true; // true: Zeigt die Bedienoberfläche an
+boolean showgui = true; // true: Zeigt die Buttons und das Menü an
 boolean showmap = true; // true: Zeigt die Karte an
 boolean increaseBubbles = true; // true: Bubbles werden vergrößert
-boolean tracking = false; // true: Malte Spitz bewegt sich
-int trackpointsCounter = 0;
-SimpleDateFormat dateformat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+boolean playing = false; // true: Malte Spitz bewegt sich
+int trackpointsCounter = 0; // Zeigt die Trackpoints an
+SimpleDateFormat dateformat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss"); // Zur Anzeige von Datum
 Date startoffset = new Date();
 Date endoffset = new Date();
 int speed = 20;
+
+boolean datefilter = true;
+boolean hourfilter = false;
 
 // 1 = Datumsfilter
 // 2 = Stundenfilter
@@ -75,7 +78,7 @@ int speed = 20;
 int filterSwitch = 1;
 
 // 1- Datumsfilter - Zeitspanne von-bis
-String beginnDate = "01.12.2009 04:05:06";
+String beginnDate = "01.01.2010 04:05:06";
 String endDate = "28.01.2010 00:00:00";
 
 // 2- Stundenfilter - Stundengrenzen von-bis 
@@ -163,40 +166,13 @@ void setup() {
 
 
 /* ################ */
-/*      Classes     */
+/*      Zeichnen     */
 /* ################ */
 
-
-// Klasse um die Handydaten von Malte Spitz zu speichern
-class Trackpoint {
-  Date time;
-  String service;
-  Location location;
-
-  //time | service | latitude | longitude
-  public Trackpoint(String[] pieces) {
-    //8/31/09 8:09
-    SimpleDateFormat track_format = new SimpleDateFormat("MM/dd/yy HH:mm");
-
-    try {
-      this.time = track_format.parse(pieces[0]);
-    }
-    catch(ParseException e) {
-    }
-    this.service = pieces[1];
-    this.location = new Location(float(pieces[2]), float(pieces[3]));
-  }
-}
-
-
-/* ################ */
-/*      Drawing     */
-/* ################ */
+/* Alles was gezeichnet werden soll kommt hier */
 
 
 void draw() {
-
-  //println("Geschwindigkeit: " +speed + "Framerate" + frameRate);
 
   // Geschwindigkeit des Durchlaufs
   frameRate(speed);
@@ -209,8 +185,104 @@ void draw() {
     map.draw();
   }
 
+  // Anzeigen von fünf Trackpoints hintereinander
+  if (trackpoints.size() != 0)
+  {
+    trackpoint1 = (Trackpoint) trackpoints.get(trackpointsCounter);
+    Trackpoint trackpoint2 = (Trackpoint) trackpoints.get(trackpointsCounter+1);
+    Trackpoint trackpoint3 = (Trackpoint) trackpoints.get(trackpointsCounter+2);
+    Trackpoint trackpoint4 = (Trackpoint) trackpoints.get(trackpointsCounter+3);
+    Trackpoint trackpoint5 = (Trackpoint) trackpoints.get(trackpointsCounter+4);
 
-  // draw all the buttons and check for mouse-over
+    Point2f punkt1 = map.locationPoint(trackpoint1.location);
+    Point2f punkt2 = map.locationPoint(trackpoint2.location);
+    Point2f punkt3 = map.locationPoint(trackpoint3.location);
+    Point2f punkt4 = map.locationPoint(trackpoint4.location);
+    Point2f punkt5 = map.locationPoint(trackpoint5.location);
+
+    //fill (R, G, B, alpha)
+    fill(102, 102, 102, 80);
+    noStroke();
+
+    // Für jeden der fünf Trackpoints einen Kreis zeichnen
+    ellipse(punkt1.x, punkt1.y, 15, 15);
+    ellipse(punkt2.x, punkt2.y, 10, 10);
+    ellipse(punkt3.x, punkt3.y, 10, 10);
+    ellipse(punkt4.x, punkt4.y, 10, 10);
+    ellipse(punkt5.x, punkt5.y, 10, 10);
+
+    // Diese Kreise mit Linien verbinden
+    // sodass eine Art Kette entsteht
+    strokeWeight(2);
+    stroke(102, 102, 102, 80);
+    line(punkt1.x, punkt1.y, punkt2.x, punkt2.y);
+    line(punkt2.x, punkt2.y, punkt3.x, punkt3.y);
+    line(punkt3.x, punkt3.y, punkt4.x, punkt4.y);
+    line(punkt4.x, punkt4.y, punkt5.x, punkt5.y);
+
+
+    // Text neben dem sich bewegenden Trackpoint
+    fill(0, 0, 0);
+    //text(dateformat.format(trackpoint1.time) +" "+trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
+
+
+
+    // Amountbubble erzeugten, wenn es an einem Punkt noch keine gibt
+    // sonst den Zähler der bestehenden erhöhen
+
+    boolean found = false;
+
+    if (increaseBubbles) {
+      for (int j = 0; j < amountbubbles.size(); j++) {
+        Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
+        if (bubbletemp.equalsOther(trackpoint1.location)) {
+          bubbletemp.increaseSize();
+          if (trackpoint1.service.contains("Telefonie")) {
+            bubbletemp.increaseCallCounter();
+          }
+          else if (trackpoint1.service.contains("GPRS")) {
+            bubbletemp.increaseGprsCounter();
+          }
+          else if (trackpoint1.service.contains("SMS")) {
+            bubbletemp.increaseSmsCounter();
+          }        
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        Amountbubble amountbubble = new Amountbubble(trackpoint1.location);
+        amountbubbles.add(amountbubble);
+      }
+    }
+
+    // Alle Amountbubbles zeichnen
+    for (int i = 0; i < amountbubbles.size(); i++) {
+      Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(i);
+      bubbletemp.draw(map, bubbletemp.equalsOther(trackpoint1.location));
+    }
+
+    // Trackpointzähler erhöhen bis alle Trackpoints angezeigt wurden
+    // playing sagt ob Abgespielt oder Pausiert wird
+    if (trackpointsCounter < trackpoints.size()-5 && playing) {
+      trackpointsCounter++;
+      increaseBubbles = true;
+    }
+    else {
+      increaseBubbles = false;
+    }
+  }
+  else {
+    println("Error: Keine Trackpoints gefunden");
+  }
+
+
+
+
+  /* Menü + Buttons */
+
+  // Alle Buttons zeichnen und überprüfen ob Maus darüber
   boolean hand = false;
   if (showgui) {
     for (int i = 0; i < buttons.length; i++) {
@@ -219,8 +291,8 @@ void draw() {
     }
   }
 
-  // when pointer over button, use the finger pointer
-  // otherwise use the cross
+  // Wenn die Maus über einem Button ist soll der Zeiger als 
+  // Hand dargestellt werden sonst als Kreuz
   cursor(hand ? HAND : CROSS);
 
   // see if the arrow keys or +/- keys are pressed:
@@ -248,88 +320,7 @@ void draw() {
     }
   }
 
-
-
-  //show and connect five points in order of appearance
-  Trackpoint trackpoint1 = (Trackpoint) trackpoints.get(trackpointsCounter);
-  Trackpoint trackpoint2 = (Trackpoint) trackpoints.get(trackpointsCounter+1);
-  Trackpoint trackpoint3 = (Trackpoint) trackpoints.get(trackpointsCounter+2);
-  Trackpoint trackpoint4 = (Trackpoint) trackpoints.get(trackpointsCounter+3);
-  Trackpoint trackpoint5 = (Trackpoint) trackpoints.get(trackpointsCounter+4);
-
-  Point2f punkt1 = map.locationPoint(trackpoint1.location);
-  Point2f punkt2 = map.locationPoint(trackpoint2.location);
-  Point2f punkt3 = map.locationPoint(trackpoint3.location);
-  Point2f punkt4 = map.locationPoint(trackpoint4.location);
-  Point2f punkt5 = map.locationPoint(trackpoint5.location);
-
-  //fill (R, G, B, alpha)
-  fill(102, 102, 102, 80);
-  noStroke();
-
-  ellipse(punkt1.x, punkt1.y, 15, 15);
-  ellipse(punkt2.x, punkt2.y, 10, 10);
-  ellipse(punkt3.x, punkt3.y, 10, 10);
-  ellipse(punkt4.x, punkt4.y, 10, 10);
-  ellipse(punkt5.x, punkt5.y, 10, 10);
-
-
-  strokeWeight(2);
-  stroke(102, 102, 102, 80);
-  line(punkt1.x, punkt1.y, punkt2.x, punkt2.y);
-  line(punkt2.x, punkt2.y, punkt3.x, punkt3.y);
-  line(punkt3.x, punkt3.y, punkt4.x, punkt4.y);
-  line(punkt4.x, punkt4.y, punkt5.x, punkt5.y);
-
-
-  
-  // Text neben dem sich bewegenden Trackpoint
-  
-  //fill(0, 0, 0);
-  //text(trackpoint1.time.getHours()+ "", punkt1.x - 4, punkt1.y + 5);
-  //text(dateformat.format(trackpoint1.time.getTime()) +" "+trackpoint1.location, punkt1.x - 4, punkt1.y + 5);
-
-  boolean found = false;
-
-  if (increaseBubbles) {
-    for (int j = 0; j < amountbubbles.size(); j++) {
-      Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(j);
-      if (bubbletemp.equalsOther(trackpoint1.location)) {
-        bubbletemp.increaseSize();
-        if (trackpoint1.service.contains("Telefonie")) {
-          bubbletemp.increaseCallCounter();
-        }
-        else if (trackpoint1.service.contains("GPRS")) {
-          bubbletemp.increaseGprsCounter();
-        }
-        else if (trackpoint1.service.contains("SMS")) {
-          bubbletemp.increaseSmsCounter();
-        }        
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      Amountbubble amountbubble = new Amountbubble(trackpoint1.location);
-      amountbubbles.add(amountbubble);
-    }
-  }
-  for (int i = 0; i < amountbubbles.size(); i++) {
-    Amountbubble bubbletemp = (Amountbubble) amountbubbles.get(i);
-    bubbletemp.draw(map, bubbletemp.equalsOther(trackpoint1.location));
-  }
-
-  // Trackpointzähler erhöhen bis alle Trackpoints angezeigt wurden
-  if (trackpointsCounter < trackpoints.size()-5 && tracking) {
-    trackpointsCounter++;
-    increaseBubbles = true;
-  }
-  else {
-    increaseBubbles = false;
-  }
-
-  // show buttons and gui-bar
+  // Button und Menü anzeigen
   if (showgui) {
 
     textFont(font, 12);
@@ -342,20 +333,22 @@ void draw() {
     strokeWeight(1);
     line(0, height-g.textSize-8, width, height-g.textSize-8) ;
 
-    // grab the lat/lon location under the mouse point:
+    // Länge- und Breite-Koordinaten der Maus-Position anzeigen
     Location location = map.pointLocation(mouseX, mouseY);
 
-    // draw the mouse location, bottom left:    
+    // Mauskoordinaten links unten hinschreiben 
     fill(50);
     textAlign(LEFT, BOTTOM);
     text("Koordinaten " + location, 3, height-3);
 
-    // draw date of current trackoint, bottom center
+    // Datum+Zeit des derzeitigen Trackpoints unten mittig hinschreiben
     fill(129, 80, 80);
     textAlign(CENTER, BOTTOM);
-    text(dateformat.format(trackpoint1.time.getTime()) +"", width/2, height-3);
-
-    // show number trackpoints in trackpoints[], bottom right
+    if (trackpoints.size() != 0)
+    {
+      text(dateformat.format(trackpoint1.time.getTime()) +"", width/2, height-3);
+    }
+    // Anzahl der schon angezeigten Trackpoints recht unten hinschreiben
     fill(50);
     textAlign(RIGHT, BOTTOM);
     text("Trackpointzähler " + trackpointsCounter, width-3, height-3);
@@ -364,6 +357,8 @@ void draw() {
     /*location = map.pointLocation(width/2, height/2);*/
   }
 }
+
+
 
 
 /* ################ */
@@ -376,7 +371,7 @@ void draw() {
 //println((float)map.tx + " " + (float)map.ty);
 
 void keyReleased() {
-  //g for showing/unshowing controls and points
+  //Drücke "G" um das Menü und die Buttons angezeigt zu bekommen
   if (key == 'g' || key == 'G') {
     showgui = !showgui;
   }
@@ -460,7 +455,7 @@ void mouseClicked() {
     map.panRight();
   }
   else if (play.mouseOver()) {
-    tracking = !tracking;
+    playing = !playing;
   }
 }
 

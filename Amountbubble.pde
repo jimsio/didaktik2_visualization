@@ -1,11 +1,15 @@
+// Amountbubble ist ein Objekt um die Häufigkeit des Passierens von Malte Spitz
+// an einem bestimmten Punkt zu messen
+
+
 class Amountbubble {
 
-  Location location;
-  float diameter;
-  int counter;
-  int callCounter;
-  int gprsCounter;
-  int smsCounter;
+  Location location; // Position der Bubble
+  float diameter; // Durchmesser
+  int counter; // allgemeiner Zähler, wie oft schon passiert wurde
+  int callCounter; // Zähler, wie oft telefoniert wurde
+  int gprsCounter; // Zähler, wie oft Internet auf dem Handy benutzt wurde
+  int smsCounter; // Zähler, wie oft SMS benutzt wurden
 
   public Amountbubble(Location punkt) {
     this.location = punkt;
@@ -13,24 +17,28 @@ class Amountbubble {
     this.counter = 1;
   }
 
+  // Durchmesser der Bubble vergrößern und der allgemeine Zähler erhöht
   void increaseSize() {
     this.diameter = diameter+0.05;
     this.counter++;
   }
-
+  
+  // Telefonier-Zähler erhöhen
   void increaseCallCounter() {
     this.callCounter++;
   }
 
+  // Internet-Zähler erhöhen
   void increaseGprsCounter() {
     this.gprsCounter++;
   }
 
+  // SMS-Zähler erhöhen
   void increaseSmsCounter() {
     this.smsCounter++;
-  }  
+  }
 
-
+  // Überprüft ob zwei Bubbles an der gleichen Stelle sind
   public boolean equalsOther(Location that) {
     float distance = (float)Math.sqrt(Math.pow((that.lat - this.location.lat), 2) + Math.pow((that.lon - this.location.lon), 2));
     return distance < 0.002;
@@ -41,6 +49,8 @@ class Amountbubble {
     draw(punkt.x, punkt.y, highlight);
   }
 
+  // Amountbubble wird gezeichnet
+  // Hier können Änderungen vorgenommen werden, um das Aussehen der Bubble anzupassen
   void draw(float x, float y, boolean highlight) {
 
     // Bubble in hellem rot
@@ -75,6 +85,7 @@ class Amountbubble {
      text(counterText, x, y + 4);*/
 
 
+
     // Bubble als Kuchendiagramm aufgeschlüsselt nach den Services
     /*strokeWeight(1);
      stroke(150);
@@ -91,7 +102,8 @@ class Amountbubble {
      }*/
 
 
-    // bubble with x-mark in the center
+    // Bubble mit einem x in der Mitte
+    
     /*stroke(255,255,255, 40);
      int l = 2;
      line(x-l, y-l, x+l, y+l);

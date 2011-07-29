@@ -15,6 +15,7 @@ class Button {
   }
   
   void draw() {
+    strokeWeight(1);
     stroke(80);
     fill(mouseOver() ? 255 : 220);
     rect(x,y,w,h); 
@@ -95,9 +96,15 @@ class PlayButton extends Button {
     stroke(150);
     ellipse(width/2-2, height-42, 40, 40);
     
+    
     noStroke();
     fill(120);
-    triangle(width/2-5, height-48, width/2-5, height-34, width/2+5, height-42);
+    /*if(playing) {
+      rect(width/2-5, height-48, 10, 30);
+    }
+    else {*/
+      triangle(width/2-5, height-48, width/2-5, height-34, width/2+5, height-42);
+    //}
   }
   
 }
