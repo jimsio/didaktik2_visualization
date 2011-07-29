@@ -15,19 +15,20 @@
  */
 
 
-/*
- TODO:
- Service darstellen: Telefon zeichnen, wenn Telefoniert wurde - 01001 bei Daten, Brief bei SMS
- Häufigkeit an einem frei gewählten Punkt - z.B. Reichstag (mit Angabe von Radius um diesen Punkt)
- Auslagern von Methoden
- 2 Modi: (schnelldurchlauf, playbutton + live-durchlauf)
+/* 
+ Einführung:
+ 
+ Andere Handy/Positionsdaten Visualisierungen untersuchen (Welche Daten gibt es hier, wie werden sie angezeigt)
+ http://crowdflow.net/blog/2011/07/12/fireflies-hd/
+ http://vimeo.com/14009407
+ http://www.zeit.de/datenschutz/malte-spitz-vorratsdaten
+ 
+ Verbindung mit anderen Services (z.B. Twitter, Facebook, Blog,..) lässt sich ein umfassendes Personenprofil erstellen
  
  Framework - Cheatsheet
  + Kartendarstellung auswählbar
- 
- + 
  + Farben, Formen auswählen
- + Amountbubble-anzeige-modi (heatmap, normal, mit highlight, mit tortendiagramm)
+ + Amountbubble-Anzeige-modi (heatmap, normal, mit highlight, mit tortendiagramm)
  
  
  */
@@ -69,19 +70,16 @@ Date startoffset = new Date();
 Date endoffset = new Date();
 int speed = 20;
 
-boolean datefilter = true;
-boolean hourfilter = false;
-
 // 1 = Datumsfilter
 // 2 = Stundenfilter
 // 3 = kein Filter
 int filterSwitch = 1;
 
-// 1- Datumsfilter - Zeitspanne von-bis
+// Datumsfilter - Zeitspanne von-bis
 String beginnDate = "01.01.2010 04:05:06";
 String endDate = "28.01.2010 00:00:00";
 
-// 2- Stundenfilter - Stundengrenzen von-bis 
+// Stundenfilter - Stundengrenzen von-bis 
 int beginnHour = 23;
 int endHour = 2;
 
@@ -97,25 +95,33 @@ int endHour = 2;
 
 
 void setup() {
+  //Größe der Bühne setzen
   size(stageWidth, stageHeight);
+
+  // Geglättete Darstellung
   smooth();
 
-  amountbubbles = new ArrayList(); //create empty ArrayList
+  // ArrayList um Amountbubbles zu speichern
+  amountbubbles = new ArrayList(); 
 
-    try {
+  try {
     startoffset = dateformat.parse(beginnDate);
     endoffset = dateformat.parse(endDate);
   }
   catch(ParseException e) {
   }
 
-  //load the csv-file with Malte Spitz' location data
+  // CSV-Datei mit Vorratsdaten von Malte Spitz laden
   trackdata = loadStrings("ex_data.csv");
-  trackpoints = new ArrayList(); //create empty ArrayList
+  trackpoints = new ArrayList();
   for (int i = 0; i < trackdata.length; i++) {
-    String[] pieces = split(trackdata[i], ";"); //load each location into array
+    String[] pieces = split(trackdata[i], ";"); // jede Zeile in Array laden
+    
     //time | service | latitude | longitude
+    // neuen Trackpoint erzeugen
     Trackpoint t = new Trackpoint (pieces);
+    
+    // Auswahl welcher Filter aktiviert ist
     switch(filterSwitch) {
     case 1: 
       if (t.time.after(startoffset) && t.time.before(endoffset)) {
@@ -134,7 +140,6 @@ void setup() {
         }
       }
       break;
-
     case 3:
       trackpoints.add(t);
       break;
@@ -229,7 +234,7 @@ void draw() {
 
     // Amountbubble erzeugten, wenn es an einem Punkt noch keine gibt
     // sonst den Zähler der bestehenden erhöhen
-
+    // selbes für die Zähler von Telefonie-, Internet- und SMS-Gebrauch
     boolean found = false;
 
     if (increaseBubbles) {
@@ -264,7 +269,7 @@ void draw() {
     }
 
     // Trackpointzähler erhöhen bis alle Trackpoints angezeigt wurden
-    // playing sagt ob Abgespielt oder Pausiert wird
+    // playing sagt ob abgespielt oder pausiert wird
     if (trackpointsCounter < trackpoints.size()-5 && playing) {
       trackpointsCounter++;
       increaseBubbles = true;
@@ -295,8 +300,7 @@ void draw() {
   // Hand dargestellt werden sonst als Kreuz
   cursor(hand ? HAND : CROSS);
 
-  // see if the arrow keys or +/- keys are pressed:
-  // (also check space and z, to reset or round zoom levels)
+  // Überprüfen ob bestimmte Taste gedrückt worden ist
   if (keyPressed) {
     if (key == CODED) {
       if (keyCode == LEFT) {
@@ -323,12 +327,15 @@ void draw() {
   // Button und Menü anzeigen
   if (showgui) {
 
+    // Schriftart + Größe einstellen
     textFont(font, 12);
 
+    // Menübalken zeichnen
     fill(200);
     noStroke();
     rect(0, height-g.textSize-8, width, g.textSize+8);
 
+    // Menüstrich zeichnen
     stroke(150);
     strokeWeight(1);
     line(0, height-g.textSize-8, width, height-g.textSize-8) ;
@@ -353,10 +360,13 @@ void draw() {
     textAlign(RIGHT, BOTTOM);
     text("Trackpointzähler " + trackpointsCounter, width-3, height-3);
 
-    // grab the center
+    // Zentrum der Karte
     /*location = map.pointLocation(width/2, height/2);*/
   }
 }
+
+
+
 
 
 
@@ -379,6 +389,7 @@ void keyReleased() {
   else if (key == 's' || key == 'S') {
     save("screenshot_"+timestamp()+".jpg");
   }
+  // Drücke "M" um die Landkarte ein- bzw. auszublenden
   else if (key == 'm') {
     showmap = !showmap;
   }
@@ -393,12 +404,12 @@ void keyReleased() {
       speed -= 10;
     }
   }
-  // noch nicht fertig!!
+  /*
   else if (key == 'b') {
     Location currentMouseLocation = map.pointLocation(mouseX, mouseY);
     LocationBubble reichstag = new LocationBubble(currentMouseLocation, "cell_phone.svg");
     reichstag.draw(map, false);
-  }
+  }*/
   /*else if (key == 'z' || key == 'Z') {
    map.sc = pow(2, map.getZoom());
    }
@@ -410,7 +421,7 @@ void keyReleased() {
 }
 
 
-// see if we're over any buttons, otherwise tell the map to drag
+// Schauen ob über einem Button sonst die Karten draggen lassen
 void mouseDragged() {
   boolean hand = false;
   if (showgui) {
@@ -434,7 +445,7 @@ void mouseWheel(int delta) {
   }
 }
 
-// see if we're over any buttons, and respond accordingly:
+// Schauen ob über einem Button und entsprechend bei Klick reagieren
 void mouseClicked() {
   if (in.mouseOver()) {
     map.zoomIn();
@@ -460,12 +471,11 @@ void mouseClicked() {
 }
 
 
-/* #################################### */
-/*     Additional Userful Functions     */
-/* #################################### */
+/* ######################################### */
+/*     Zusätzliche brauchbare Funktionen     */
+/* ######################################### */
 
 String timestamp() {
   Calendar now = Calendar.getInstance();
   return String.format("%1$ty%1$tm%1$td_%1$tH%1$tM%1$tS", now);
 }
-

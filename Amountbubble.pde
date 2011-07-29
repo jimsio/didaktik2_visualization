@@ -111,7 +111,7 @@ class Amountbubble {
   }
 }
 
-// noch nicht fertig!!!
+/*
 class LocationBubble extends Amountbubble {
   
   String picture;
@@ -128,4 +128,4 @@ class LocationBubble extends Amountbubble {
     s = loadShape(picture);
     shape(s, 10, 10, 80, 80);
   }
-}
+}*/
