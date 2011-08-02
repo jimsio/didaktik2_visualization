@@ -12,26 +12,83 @@
  P/O - schnellerer/langsamerer Durchlauf
  S - Screenshot speichern
  
- */
+*/
 
 
-/* 
+/*
+ab 10. Klassenstufe (15/16-Jährige)
+Di. - 10 bis 14 plus 2h
+
  Einführung:
  
- Andere Handy/Positionsdaten Visualisierungen untersuchen (Welche Daten gibt es hier, wie werden sie angezeigt)
+ Phase 4 - Sandra
+ Andere Handy/Positionsdaten Visualisierungen untersuchen (Welche Daten gibt es hier, wie werden sie angezeigt
+ Welche Daten + Wie Visualisiert
  http://crowdflow.net/blog/2011/07/12/fireflies-hd/
  http://vimeo.com/14009407
  http://www.zeit.de/datenschutz/malte-spitz-vorratsdaten
  
- Verbindung mit anderen Services (z.B. Twitter, Facebook, Blog,..) lässt sich ein umfassendes Personenprofil erstellen
+ 
  
  Framework - Cheatsheet
+ ++ Oberfläche-GUI
+ + Playbutton zum Starten
+ ++ Code
  + Kartendarstellung auswählbar
- + Farben, Formen auswählen
  + Amountbubble-Anzeige-modi (heatmap, normal, mit highlight, mit tortendiagramm)
+ + Datum-, Stundenfilter
+ + 
  
+ Sandra
+ + Positionsdaten wichtig zu erwähnen woher diese kommen.
+ 
+ Fragestelllungen herausarbeiten (3 Fragen - wie diese Fragen bekommen von Schülern)
+ + Was ist in dieser Zeit passiert und was hat Malte zu dieser Zeit gemacht?
+ + Ein Stalker versucht Malte Spitz abzupassen. Wo wäre eine günstige Gelegenheit? (Zeitpunkt x)
+ + Die Ex will wissen wo er schläft oder ob er sich im Rotlichtmileu aufhält.
+ + Fliegt er häufig (Umweltschutz)
+ + Ein Mobilfunkanbieter will ein Profil seines Telefonverhaltens aufstellen: Wieviele SMS verschickt er? Wieviele Telefonate führt er? Wie lange gehen die Telefonate?
+ + Ehemaliges Ost- oder Westberlin
+ + Firma, wo geht er oft vorbei, sodass ich dort mein Restaurant eröffnen kann (bei sehr vielen ~5000 Datensätzen interessant)
+
+ Antworten in den Visualisierungen finden
+ Wenn sie eine Antwort finden haben sie gezeigt, dass aus den Daten Informationen werden können
+ 
+ 
+ creative flow!!! wenn sie in den cf reinkommen, würden sie selbstständig weiterarbeiten (auch ohne extrinsische motivation)
+ 
+ 
+ ++ Beobachtung der Unterrichtsdurchführung
+ SuS
+ + Was haben die SuS aus den vorhergehenden Einheiten
+ + Motivation der SuS
+ + Vorwissen der SuS
+ Lehrer
+ + Funktioniert das so wie wir uns das gedacht haben?
+ + Wie werden Medien eingesetzt?
+ + Zeitliche Planung
+ + Fachliche Kompetenz (geht er auf die Fragen der SuS ein? Kennt er sich aus?)
+ 
+ Unsere Ziele - wurden sie erfüllt
+ + Unterschied zw. Informationen und Daten verstanden
+ Verbindung mit anderen Services (z.B. Twitter, Facebook, Blog,..) lässt sich ein umfassendes Personenprofil erstellen
  
  */
+
+
+// 1 = Datumsfilter
+// 2 = Stundenfilter
+// 3 = kein Filter
+int filterSwitch = 2;
+
+// Datumsfilter - Zeitspanne von-bis
+String beginnDate = "01.01.2010 04:05:06";
+String endDate = "28.01.2010 00:00:00";
+
+// Stundenfilter - Stundengrenzen von-bis 
+int beginnHour = 8;
+int endHour = 9;
+
 
 
 // Landkarte
@@ -70,20 +127,6 @@ Date startoffset = new Date();
 Date endoffset = new Date();
 int speed = 20;
 
-// 1 = Datumsfilter
-// 2 = Stundenfilter
-// 3 = kein Filter
-int filterSwitch = 1;
-
-// Datumsfilter - Zeitspanne von-bis
-String beginnDate = "01.01.2010 04:05:06";
-String endDate = "28.01.2010 00:00:00";
-
-// Stundenfilter - Stundengrenzen von-bis 
-int beginnHour = 23;
-int endHour = 2;
-
-
 
 
 
@@ -97,6 +140,13 @@ int endHour = 2;
 void setup() {
   //Größe der Bühne setzen
   size(stageWidth, stageHeight);
+
+  // Karte erzeugen und Darstellungsart/Anbieter auswählen
+  map = new InteractiveMap(this, new Microsoft.RoadProvider());
+  //map = new InteractiveMap(this, new OpenStreetMapProvider());
+  //map = new InteractiveMap(this, new Microsoft.HybridProvider());
+  //map = new InteractiveMap(this, new Microsoft.AerialProvider());
+
 
   // Geglättete Darstellung
   smooth();
@@ -145,12 +195,6 @@ void setup() {
       break;
     }
   }
-
-  // Karte erzeugen und Darstellungsart/Anbieter auswählen
-  map = new InteractiveMap(this, new Microsoft.RoadProvider());
-  //map = new InteractiveMap(this, new OpenStreetMapProvider());
-  //map = new InteractiveMap(this, new Microsoft.HybridProvider());
-  //map = new InteractiveMap(this, new Microsoft.AerialProvider());
 
   // Startposition auf Berlin setzten (latitude/longitude), zoomlevel
   map.setCenterZoom(new Location(52.497832, 13.412933), 11);
@@ -279,7 +323,7 @@ void draw() {
     }
   }
   else {
-    println("Error: Keine Trackpoints gefunden");
+    println("Error: Keine Trackpoints gefunden. Könnte daran liegen, dass der Datumsbereich falsch gewählt wurde.");
   }
 
 

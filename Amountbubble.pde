@@ -92,7 +92,10 @@ class Amountbubble {
      float diameter = 2*diameter;
      float z = max(this.callCounter + this.smsCounter + this.gprsCounter, 1);
      int[] angs = {round((this.callCounter/z)*360), round((this.smsCounter/z)*360), round((this.gprsCounter/z)*360)};
+     
+     // Farben der unterschiedlichen Services
      color[] pieColors = {color(199,208,217), color(242,215,215), color(215,242,226)};
+     
      float lastAng = 0;
      
      for (int i = 0; i < angs.length; i++) {
